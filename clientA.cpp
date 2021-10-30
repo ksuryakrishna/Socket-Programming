@@ -1,7 +1,7 @@
 /*
 ** client.c -- a stream socket client demo
 */
-
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,9 +14,11 @@
 
 #include <arpa/inet.h>
 
-#define PORT "3490" // the port client will be connecting to 
+#define PORT "25716" // the port client will be connecting to 
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
+
+using namespace std;
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -82,6 +84,7 @@ int main(int argc, char *argv[])
 	if(send(sockfd, argv[1], sizeof argv[1], 0) == -1){
 		perror("Error sending clientA Name to ServerC");
 	}
+	cout << "Waiting to receive\n";
 	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
 	    perror("recv");
 	    exit(1);
