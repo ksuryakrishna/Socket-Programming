@@ -20,16 +20,20 @@
 
 #define PORT2 "26716" // TCP2 - the port users will be connecting to
 
-#define SERVER_T_PORT "21716"	// the port users will be connecting to
+#define SERVER_T_PORT "21716"	// the port central server uses to connect to T
+
+#define MY_UDP_PORT "24716"  //the port serverT will be connecting to
 
 #define BACKLOG 10	 // how many pending connections queue will hold
+
+#define MAXBUFLEN 100
 
 using namespace std;
 
 	int sockfd1, sockfd2, new_fd1, new_fd2;  // listen on sockfd1 and sockfd2, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
-	socklen_t sin_size;
+	socklen_t sin_size, addr_len;
 	struct sigaction sa;
 
 	char s[INET6_ADDRSTRLEN];
@@ -180,6 +184,66 @@ void reap_all_dead_process(){
 	}
 }
 
+void Receive_graph_from_ServerT(){
+	//Add listener code here and add recv two times(depends on how i receive)
+	sockfd2 = 0;
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE; // use my IP
+
+	if ((rv = getaddrinfo("127.0.0.1", MY_UDP_PORT, &hints, &servinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		return;
+	}
+
+	// loop through all the results and bind to the first we can
+	for(p = servinfo; p != NULL; p = p->ai_next) {
+		if ((sockfd2 = socket(p->ai_family, p->ai_socktype,
+				p->ai_protocol)) == -1) {
+			perror("listener: socket");
+			continue;
+		}
+
+		if (bind(sockfd2, p->ai_addr, p->ai_addrlen) == -1) {
+			close(sockfd2);
+			perror("listener: bind");
+			continue;
+		}
+
+		break;
+	}
+
+	if (p == NULL) {
+		fprintf(stderr, "listener: failed to bind socket\n");
+		return;
+	}
+
+	freeaddrinfo(servinfo);
+
+	printf("listener: waiting to recvfrom...\n");
+
+	addr_len = sizeof their_addr;
+	if ((nbytes = recvfrom(sockfd2, buf, MAXBUFLEN-1 , 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+
+	printf("listener: got packet from %s\n",
+		inet_ntop(their_addr.ss_family,
+			get_in_addr((struct sockaddr *)&their_addr),
+			s, sizeof s));
+	printf("listener: packet is %d bytes long\n", nbytes);
+	buf[nbytes] = '\0';
+	printf("listener: packet contains \"%s\"\n", buf);
+
+	close(sockfd2);
+
+
+}
+
 void Connect_to_ServerT(){
 
 	sockfd1 = 0; //used for UDP connection between central and T
@@ -210,20 +274,42 @@ void Connect_to_ServerT(){
 		fprintf(stderr, "talker: failed to create socket\n");
 		return;
 	}
-	char test[] = "ServerT send rec test";
-	if ((nbytes = sendto(sockfd1, test, strlen(test), 0,
+	//char test[] = "ServerT send rec test";
+	if ((nbytes = sendto(sockfd1, clientA_Name, strlen(clientA_Name), 0,
 			 p->ai_addr, p->ai_addrlen)) == -1){
 		perror("talker: sendto");
 		exit(1);
 	}
+	printf("talker: sent %d bytes to server T\n", nbytes);
+
+	if ((nbytes = sendto(sockfd1, clientB_Name, strlen(clientB_Name), 0,
+			 p->ai_addr, p->ai_addrlen)) == -1){
+		perror("talker: sendto");
+		exit(1);
+	}	
+	printf("talker: sent %d bytes to server T\n", nbytes);
+
+		// //sample receive from T
+		// if ((nbytes = recvfrom(sockfd1, buf, MAXBUFLEN-1 , 0,
+		// 	(struct sockaddr *)&their_addr, &sin_size)) == -1) {
+		// 	perror("recvfrom T error");
+		// 	exit(1);
+		// }
+
+		// printf("Received %s, %d from %s \n", buf, nbytes,
+		// 	inet_ntop(their_addr.ss_family,
+		// 		get_in_addr((struct sockaddr *)&their_addr),
+		// 		s, sizeof s) );
 
 	freeaddrinfo(servinfo);
-
-	printf("talker: sent %d bytes to server T\n", nbytes);
 	close(sockfd1);
+	/*Sending to Server T is done. Now bind socket and wait for reply of
+	graphs and list of nodes*/
 
-
+	Receive_graph_from_ServerT();
 }
+
+
 int main(void)
 {
     FD_ZERO(&master);    // clear the master and temp sets

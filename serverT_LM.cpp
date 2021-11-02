@@ -15,7 +15,17 @@
 
 #define MYPORT "21716"	// the port users will be connecting to
 
+#define CENTRAL_PORT "24716" //the port T uses to connect to central
 #define MAXBUFLEN 100
+
+	int sockfd;
+	struct addrinfo hints, *servinfo, *p;
+	int rv;
+	int numbytes;
+	struct sockaddr_storage their_addr;
+	char buf[MAXBUFLEN];
+	socklen_t addr_len;
+	char s[INET6_ADDRSTRLEN];
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -27,16 +37,47 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+void Connect_to_Central_to_send_graph(){
+	//add content of talker here
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET; 
+	hints.ai_socktype = SOCK_DGRAM;
+
+	if ((rv = getaddrinfo("127.0.0.1", CENTRAL_PORT, &hints, &servinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		return;
+	}
+
+	// loop through all the results and make a socket
+	for(p = servinfo; p != NULL; p = p->ai_next) {
+		if ((sockfd = socket(p->ai_family, p->ai_socktype,
+				p->ai_protocol)) == -1) {
+			perror("talker: socket");
+			continue;
+		}
+
+		break;
+	}
+
+	if (p == NULL) {
+		fprintf(stderr, "talker: failed to create socket\n");
+		return;
+	}
+	char a[] = "T received";
+	if ((numbytes = sendto(sockfd, a, strlen(a), 0,
+			 p->ai_addr, p->ai_addrlen)) == -1) {
+		perror("talker: sendto");
+		exit(1);
+	}
+
+	freeaddrinfo(servinfo);
+
+	printf("talker: sent %d bytes to central\n", numbytes);
+	close(sockfd);
+
+}
 int main(void)
 {
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
-	int rv;
-	int numbytes;
-	struct sockaddr_storage their_addr;
-	char buf[MAXBUFLEN];
-	socklen_t addr_len;
-	char s[INET6_ADDRSTRLEN];
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
@@ -89,7 +130,32 @@ int main(void)
 	buf[numbytes] = '\0';
 	printf("listener: packet contains \"%s\"\n", buf);
 
+	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+
+	
+	printf("listener: got packet from %s\n",
+		inet_ntop(their_addr.ss_family,
+			get_in_addr((struct sockaddr *)&their_addr),
+			s, sizeof s));
+	printf("listener: packet is %d bytes long\n", numbytes);
+	buf[numbytes] = '\0';
+	printf("listener: packet contains \"%s\"\n", buf);	
+
+	
+	//sample msg sent as reply to central server
+	// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
+	// 		 p->ai_addr, p->ai_addrlen)) == -1){
+	// 	perror("T sends to central error: sendto");
+	// 	exit(1);
+	// }	
 	close(sockfd);
+
+
+	Connect_to_Central_to_send_graph();
 
 	return 0;
 }
