@@ -115,8 +115,6 @@ int main(){
 		printf("%s\n",obj[Vertno].names);
 	}
 
-	
-
 
 
     return 1;
