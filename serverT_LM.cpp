@@ -13,6 +13,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+using namespace std; 
+
 #define MYPORT "21716"	// the port users will be connecting to
 
 #define CENTRAL_PORT "24716" //the port T uses to connect to central
@@ -26,6 +28,13 @@
 	char buf[MAXBUFLEN];
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
+
+    struct sample{
+    	int a;
+    	int b;
+    	char names[50];
+    	int arr[10][3];
+    }obj;
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -63,8 +72,13 @@ void Connect_to_Central_to_send_graph(){
 		fprintf(stderr, "talker: failed to create socket\n");
 		return;
 	}
-	char a[] = "T received";
-	if ((numbytes = sendto(sockfd, a, strlen(a), 0,
+	obj.a = 1;
+	obj.b = 2;
+	strcpy(obj.names, "Amma");
+	for(auto p = 0;p<10;p++)
+		for(auto q = 0; q<3;q++)
+			obj.arr[p][q] = p;
+	if ((numbytes = sendto(sockfd, (char*) &obj, sizeof(obj), 0,
 			 p->ai_addr, p->ai_addrlen)) == -1) {
 		perror("talker: sendto");
 		exit(1);

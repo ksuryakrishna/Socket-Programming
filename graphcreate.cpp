@@ -12,6 +12,7 @@
 #include <string>
 #include <map>
 #include <fstream>
+#include <cstring>
 
 using namespace std;
 
@@ -48,6 +49,11 @@ class Graph {
   }
 };
 
+struct convert_map_to_struct{
+	int keyvalue;
+	char names[512];
+}obj[400];
+
 int main(){
 
 	string s;
@@ -55,7 +61,7 @@ int main(){
     map<string,int> m; 
     
     fstream fs(file_name);   
-    int cnt = 0; 
+    int cnt = 0, Vertno = 0; 
     while(fs>>s){
 	    	//cout<<s<<endl;
 	    if(!m.count(s)){
@@ -97,5 +103,21 @@ int main(){
 	}
 	ifs.close();
 	g.toString();
+
+	//add the map values on to a struct obj - total numVertices
+	for(i=m.begin(); i!=m.end(), Vertno < cnt; Vertno++, i++){
+		obj[Vertno].keyvalue = i->second;
+		strcpy(obj[Vertno].names, i->first.c_str());
+	}
+	//sample display
+	for(Vertno = 0; Vertno < cnt; Vertno++){
+		cout<<obj[Vertno].keyvalue<<"\t";
+		printf("%s\n",obj[Vertno].names);
+	}
+
+	
+
+
+
     return 1;
 }
