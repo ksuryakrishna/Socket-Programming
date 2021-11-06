@@ -51,12 +51,28 @@ using namespace std;
 
     int clientA_rec = 0, clientB_rec = 0;
     //end - select inclusion declaration
-    struct sample{
-    	int a;
-    	int b;
-    	char names[50];
-    	int arr[40];
-    }obj;
+    // struct sample{
+    // 	int a;
+    // 	int b;
+    // 	char names[50];
+    // 	int arr[40];
+    // }obj;
+
+    struct numV{	
+    	int numstruct;
+    }numobj;
+
+	struct convert_map_to_struct{
+		int keyvalue;
+		char names[512];
+	}obj[400];
+
+	struct adj_matrix{
+		int adj_m[400][400];
+	}adj;
+
+
+    int numVertices = 0; //get this from T through numV struct
 
 void sigchld_handler(int s)
 {
@@ -231,32 +247,56 @@ void Receive_graph_from_ServerT(){
 	printf("listener: waiting to recvfrom...\n");
 	//char int_buffer[25];	
 	addr_len = sizeof their_addr;
-	if ((nbytes = recvfrom(sockfd2, (char*) &obj, sizeof(obj)/*MAXBUFLEN-1*/, 0,
+	if ((nbytes = recvfrom(sockfd2, (char*) &numobj, sizeof(numobj)/*MAXBUFLEN-1*/, 0,
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 		perror("recvfrom");
 		exit(1);
 	}
-	
+	numVertices = numobj.numstruct;
+	cout << "numobj.numstruct (numVertices) = "<<numVertices<<endl;
+
 	printf("listener: got packet from %s\n",
 		inet_ntop(their_addr.ss_family,
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s));
 	printf("listener: packet is %d bytes long\n", nbytes);
+
+	//get ready to receive the adjacency matrix and the map in the form struct objects
+	printf("listener: waiting to recv map...\n");
+	//char int_buffer[25];	
+	for(auto x = 0; x < numVertices; x++){
+		addr_len = sizeof their_addr;
+		if ((nbytes = recvfrom(sockfd2, (char*) &obj[x], sizeof(convert_map_to_struct)/*MAXBUFLEN-1*/, 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+	}
+	cout<<"going to display received map \n";
+	//sample display just the keyvalues
+	for(auto x = 0; x<numVertices;x++){
+		cout<<x<<": \t" <<obj[x].keyvalue<<"  "<<obj[x].names<<endl;
+	}
+	//now get the matrix
+	printf("listener: waiting to recv adjacency matrix...\n");
+
+	// for(auto x = 0; x < )
 	//buf[nbytes] = '\0';
-	cout<<"obj.a="<<obj.a<<endl;
-	cout<<"obj.b="<<obj.b<<endl;
-	printf("obj.names=%s\n",obj.names);
+	// cout<<"obj.a="<<obj.a<<endl;
+	// cout<<"obj.b="<<obj.b<<endl;
+	// printf("obj.names=%s\n",obj.names);
+
 		// for(auto p = 0;p<10;p++){
 		// 	cout << p << " : ";
 		// 	for(auto q = 0; q<3;q++)
 		// 		 cout << obj.arr[p][q] << " ";
 		// 	cout << "\n";	
 		// }
-		for(auto p = 0;p<40;p++){
-			cout << p << " : ";
-				 cout << obj.arr[p] << " ";
-			cout << "\n";	
-		}
+		// for(auto p = 0;p<40;p++){
+		// 	cout << p << " : ";
+		// 		 cout << obj.arr[p] << " ";
+		// 	cout << "\n";	
+		// }
 		
 	//printf("listener: packet contains \"%s \"\n", int_buffer);
 
