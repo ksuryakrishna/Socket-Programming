@@ -47,7 +47,12 @@ using namespace std;
 	struct convert_map_to_struct{
 		int keyvalue;
 		char names[512];
-	}obj[400];    
+	}obj[400];   
+
+	struct adj_matrix{
+		int adj_m[160000];
+	}adj;
+
 //declaration for map generation
 	string S;
 	string file_name="edgelist.txt";
@@ -58,10 +63,11 @@ using namespace std;
 
 class Graph {
    private:
-  int** adjMatrix;
+  // int** adjMatrix;
   int numVertices;
 
    public:
+  int** adjMatrix;
   // Initialize the matrix to zero
   Graph(int numVertices) {
     this->numVertices = numVertices;
@@ -81,7 +87,12 @@ class Graph {
       cout << "\n";
     }
   }
-
+  // void return_matrix(int** matrix_to_send){
+  // 	for (int i = 0; i <numVertices; i++){
+  // 		for(int j = 0; j <numVertices; j++)
+  // 			matrix_to_send[i][j] = adjMatrix[i][j];
+  // 	}
+  // }
   // Add edges
   void addEdge(int i, int j) {
     adjMatrix[i][j] = 1;
@@ -101,57 +112,70 @@ void *get_in_addr(struct sockaddr *sa)
 
 void Connect_to_Central_to_send_graph(){
 	//add content of talker here
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET; 
-	hints.ai_socktype = SOCK_DGRAM;
+		memset(&hints, 0, sizeof hints);
+		hints.ai_family = AF_INET; 
+		hints.ai_socktype = SOCK_DGRAM;
 
-	if ((rv = getaddrinfo("127.0.0.1", CENTRAL_PORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return;
-	}
-
-	// loop through all the results and make a socket
-	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
-				p->ai_protocol)) == -1) {
-			perror("talker: socket");
-			continue;
+		if ((rv = getaddrinfo("127.0.0.1", CENTRAL_PORT, &hints, &servinfo)) != 0) {
+			fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+			return;
 		}
 
-		break;
-	}
+		// loop through all the results and make a socket
+		for(p = servinfo; p != NULL; p = p->ai_next) {
+			if ((sockfd = socket(p->ai_family, p->ai_socktype,
+					p->ai_protocol)) == -1) {
+				perror("talker: socket");
+				continue;
+			}
 
-	if (p == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
-		return;
-	}
-	// obj.a = 1;
-	// obj.b = 2;
-	// strcpy(obj.names, "Amma");
-	// for(auto p = 0;p<10;p++)
-	// 	for(auto q = 0; q<3;q++)
-	// 		obj.arr[p][q] = p;
+			break;
+		}
 
-	if ((numbytes = sendto(sockfd, (char*) &numobj, sizeof(numobj), 0,
-			 p->ai_addr, p->ai_addrlen)) == -1) {
-		perror("talker: sendto");
-		exit(1);
-	}
-	
-	for (auto x = 0; x < cnt; x++){
-		if ((numbytes = sendto(sockfd, (char*) &obj[x], sizeof(convert_map_to_struct), 0,
-			 p->ai_addr, p->ai_addrlen)) == -1) {
+		if (p == NULL) {
+			fprintf(stderr, "talker: failed to create socket\n");
+			return;
+		}
+		// obj.a = 1;
+		// obj.b = 2;
+		// strcpy(obj.names, "Amma");
+		// for(auto p = 0;p<10;p++)
+		// 	for(auto q = 0; q<3;q++)
+		// 		obj.arr[p][q] = p;
+
+	//send numvertices
+		if ((numbytes = sendto(sockfd, (char*) &numobj, sizeof(numobj), 0,
+				 p->ai_addr, p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
-	}
+		printf("talker: sent %d bytes to central\n", numbytes);
+		
+	//send map as struct objs
+		for (auto x = 0; x < cnt; x++){
+			if ((numbytes = sendto(sockfd, (char*) &obj[x], sizeof(convert_map_to_struct), 0,
+				 p->ai_addr, p->ai_addrlen)) == -1) {
+				perror("talker: sendto");
+				exit(1);
+			}
+		}
+		printf("talker: sent %d bytes to central\n", numbytes);
+			
+	//send adjacency matrix
+		cout<<"Going to send matrix";
+		if ((numbytes = sendto(sockfd, (char*) &adj, 65000, 0,
+				 p->ai_addr, p->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
 
-	freeaddrinfo(servinfo);
+		freeaddrinfo(servinfo);
 
-	printf("talker: sent %d bytes to central\n", numbytes);
-	close(sockfd);
+		printf("talker: sent %d bytes to central\n", numbytes);
+		close(sockfd);
 
 }
+
 void generate_map(){
 
     while(fs>>S){
@@ -211,8 +235,18 @@ void generate_map(){
 		cout<<obj[Vertno].keyvalue<<"\t";
 		printf("%s\n",obj[Vertno].names);
 	}
-
-
+	int index = 0;
+	for(auto x = 0; x < cnt; x++){
+		for(auto y = 0; y < cnt; y++){
+			adj.adj_m[index] = g.adjMatrix[x][y];
+			index+=1;
+		}
+	}
+	//sample display
+	for(auto x = 0; x < index; x++){
+		cout<<adj.adj_m[x]<<" ";
+	}
+	cout<<endl;	
 }
 int main(void)
 {

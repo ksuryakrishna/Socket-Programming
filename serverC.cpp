@@ -22,6 +22,8 @@
 
 #define SERVER_T_PORT "21716"	// the port central server uses to connect to T
 
+#define SERVER_S_PORT "22716"	// the port central server uses to connect to S
+
 #define MY_UDP_PORT "24716"  //the port serverT will be connecting to
 
 #define BACKLOG 10	 // how many pending connections queue will hold
@@ -30,7 +32,7 @@
 
 using namespace std;
 
-	int sockfd1, sockfd2, new_fd1, new_fd2;  // listen on sockfd1 and sockfd2, new connection on new_fd
+	int sockfd1, sockfd2, sockfdS, sockfdT, sockfdP, sockUDP_binded, new_fd1, new_fd2;  // listen on sockfd1 and sockfd2, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;
 	struct sockaddr_storage their_addr; // connector's address information
 	socklen_t sin_size, addr_len;
@@ -57,7 +59,7 @@ using namespace std;
     // 	char names[50];
     // 	int arr[40];
     // }obj;
-
+    int length_1D = 0; //variable that contains the 1D length of adj matrix
     struct numV{	
     	int numstruct;
     }numobj;
@@ -68,9 +70,13 @@ using namespace std;
 	}obj[400];
 
 	struct adj_matrix{
-		int adj_m[400][400];
+		int adj_m[160000];
 	}adj;
 
+	struct score_map{
+		int score_value;
+		char names[512];
+	}obj_score[400];
 
     int numVertices = 0; //get this from T through numV struct
 
@@ -205,80 +211,61 @@ void reap_all_dead_process(){
 		exit(1);
 	}
 }
+void Receive_score_from_ServerS(){
+	// //Add listener code here and add recv two times(depends on how i receive)
+	// sockfd2 = 0;
 
-void Receive_graph_from_ServerT(){
-	//Add listener code here and add recv two times(depends on how i receive)
-	sockfd2 = 0;
+	// memset(&hints, 0, sizeof hints);
+	// hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+	// hints.ai_socktype = SOCK_DGRAM;
+	// hints.ai_flags = AI_PASSIVE; // use my IP
 
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_flags = AI_PASSIVE; // use my IP
+	// if ((rv = getaddrinfo("127.0.0.1", MY_UDP_PORT, &hints, &servinfo)) != 0) {
+	// 	fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+	// 	return;
+	// }
 
-	if ((rv = getaddrinfo("127.0.0.1", MY_UDP_PORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return;
-	}
+	// // loop through all the results and bind to the first we can
+	// for(p = servinfo; p != NULL; p = p->ai_next) {
+	// 	if ((sockfd2 = socket(p->ai_family, p->ai_socktype,
+	// 			p->ai_protocol)) == -1) {
+	// 		perror("listener: socket");
+	// 		continue;
+	// 	}
 
-	// loop through all the results and bind to the first we can
-	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd2 = socket(p->ai_family, p->ai_socktype,
-				p->ai_protocol)) == -1) {
-			perror("listener: socket");
-			continue;
-		}
+	// 	if (bind(sockfd2, p->ai_addr, p->ai_addrlen) == -1) {
+	// 		close(sockfd2);
+	// 		perror("listener: bind");
+	// 		continue;
+	// 	}
 
-		if (bind(sockfd2, p->ai_addr, p->ai_addrlen) == -1) {
-			close(sockfd2);
-			perror("listener: bind");
-			continue;
-		}
+	// 	break;
+	// }
 
-		break;
-	}
+	// if (p == NULL) {
+	// 	fprintf(stderr, "listener: failed to bind socket\n");
+	// 	return;
+	// }
 
-	if (p == NULL) {
-		fprintf(stderr, "listener: failed to bind socket\n");
-		return;
-	}
+	// freeaddrinfo(servinfo);
 
-	freeaddrinfo(servinfo);
+	printf("listener: waiting to recvfrom serverS...\n");
 
-	printf("listener: waiting to recvfrom...\n");
-	//char int_buffer[25];	
-	addr_len = sizeof their_addr;
-	if ((nbytes = recvfrom(sockfd2, (char*) &numobj, sizeof(numobj)/*MAXBUFLEN-1*/, 0,
-		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
-		exit(1);
-	}
-	numVertices = numobj.numstruct;
-	cout << "numobj.numstruct (numVertices) = "<<numVertices<<endl;
-
-	printf("listener: got packet from %s\n",
-		inet_ntop(their_addr.ss_family,
-			get_in_addr((struct sockaddr *)&their_addr),
-			s, sizeof s));
-	printf("listener: packet is %d bytes long\n", nbytes);
-
-	//get ready to receive the adjacency matrix and the map in the form struct objects
-	printf("listener: waiting to recv map...\n");
 	//char int_buffer[25];	
 	for(auto x = 0; x < numVertices; x++){
 		addr_len = sizeof their_addr;
-		if ((nbytes = recvfrom(sockfd2, (char*) &obj[x], sizeof(convert_map_to_struct)/*MAXBUFLEN-1*/, 0,
+		if ((nbytes = recvfrom(sockUDP_binded, (char*) &obj_score[x], sizeof(score_map)/*MAXBUFLEN-1*/, 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 			perror("recvfrom");
 			exit(1);
 		}
 	}
-	cout<<"going to display received map \n";
-	//sample display just the keyvalues
+	cout<<"going to display received score map \n";
+	//sample display 
 	for(auto x = 0; x<numVertices;x++){
-		cout<<x<<": \t" <<obj[x].keyvalue<<"  "<<obj[x].names<<endl;
+		cout<<x<<": \t" <<obj_score[x].score_value<<"  "<<obj_score[x].names<<endl;
 	}
-	//now get the matrix
-	printf("listener: waiting to recv adjacency matrix...\n");
+
 
 	// for(auto x = 0; x < )
 	//buf[nbytes] = '\0';
@@ -299,15 +286,188 @@ void Receive_graph_from_ServerT(){
 		// }
 		
 	//printf("listener: packet contains \"%s \"\n", int_buffer);
+	
+	//Connect_to_ServerP();
+	// close(sockUDP_binded);   //dont close serverP needs it
 
-	close(sockfd2);
+
+}
+void Connect_to_ServerS(){
+
+	sockfdS = 0; //used for UDP connection between central and S
+
+	cout << "Entered connect to serverS\n";
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+	hints.ai_socktype = SOCK_DGRAM;
+
+	if ((rv = getaddrinfo("127.0.0.1", SERVER_S_PORT, &hints, &servinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		return;
+	}
+
+	// loop through all the results and make a socket
+	for(p = servinfo; p != NULL; p = p->ai_next) {
+		if ((sockfdS = socket(p->ai_family, p->ai_socktype,
+				p->ai_protocol)) == -1) {
+			perror("talker: socket");
+			continue;
+		}
+
+		break;
+	}
+
+	if (p == NULL) {
+		fprintf(stderr, "talker: failed to create socket\n");
+		return;
+	}
+	//char test[] = "ServerT send rec test";
+	char score_req[] = "Request for score";
+
+	if ((nbytes = sendto(sockfdS, score_req, strlen(score_req), 0,
+			 p->ai_addr, p->ai_addrlen)) == -1){
+		perror("talker: sendto");
+		exit(1);
+	}
+	printf("talker: sent %d bytes to server T\n", nbytes);
+
+
+		// //sample receive from T
+		// if ((nbytes = recvfrom(sockfd1, buf, MAXBUFLEN-1 , 0,
+		// 	(struct sockaddr *)&their_addr, &sin_size)) == -1) {
+		// 	perror("recvfrom T error");
+		// 	exit(1);
+		// }
+
+		// printf("Received %s, %d from %s \n", buf, nbytes,
+		// 	inet_ntop(their_addr.ss_family,
+		// 		get_in_addr((struct sockaddr *)&their_addr),
+		// 		s, sizeof s) );
+
+	freeaddrinfo(servinfo);
+	close(sockfdS);
+	/*Sending to Server S is done. Now wait for reply of
+	graphs and list of nodes*/
+
+	Receive_score_from_ServerS();
+}
+
+void Receive_graph_from_ServerT(){
+	//Add listener code here and add recv two times(depends on how i receive)
+	sockUDP_binded = 0;
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_flags = AI_PASSIVE; // use my IP
+
+	if ((rv = getaddrinfo("127.0.0.1", MY_UDP_PORT, &hints, &servinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		return;
+	}
+
+	// loop through all the results and bind to the first we can
+	for(p = servinfo; p != NULL; p = p->ai_next) {
+		if ((sockUDP_binded = socket(p->ai_family, p->ai_socktype,
+				p->ai_protocol)) == -1) {
+			perror("listener: socket");
+			continue;
+		}
+
+		if (bind(sockUDP_binded, p->ai_addr, p->ai_addrlen) == -1) {
+			close(sockUDP_binded);
+			perror("listener: bind");
+			continue;
+		}
+
+		break;
+	}
+
+	if (p == NULL) {
+		fprintf(stderr, "listener: failed to bind socket\n");
+		return;
+	}
+
+	freeaddrinfo(servinfo);
+
+	printf("listener: waiting to recvfrom...\n");
+	//char int_buffer[25];	
+	addr_len = sizeof their_addr;
+	if ((nbytes = recvfrom(sockUDP_binded, (char*) &numobj, sizeof(numobj)/*MAXBUFLEN-1*/, 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	numVertices = numobj.numstruct;
+	cout << "numobj.numstruct (numVertices) = "<<numVertices<<endl;
+
+	printf("listener: got packet from %s\n",
+		inet_ntop(their_addr.ss_family,
+			get_in_addr((struct sockaddr *)&their_addr),
+			s, sizeof s));
+	printf("listener: packet is %d bytes long\n", nbytes);
+
+	//get ready to receive the adjacency matrix and the map in the form struct objects
+	printf("listener: waiting to recv map...\n");
+	//char int_buffer[25];	
+	for(auto x = 0; x < numVertices; x++){
+		addr_len = sizeof their_addr;
+		if ((nbytes = recvfrom(sockUDP_binded, (char*) &obj[x], sizeof(convert_map_to_struct)/*MAXBUFLEN-1*/, 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+	}
+	cout<<"going to display received map \n";
+	//sample display 
+	for(auto x = 0; x<numVertices;x++){
+		cout<<x<<": \t" <<obj[x].keyvalue<<"  "<<obj[x].names<<endl;
+	}
+	//now get the matrix
+	printf("listener: waiting to recv adjacency matrix...\n");
+
+	if ((nbytes = recvfrom(sockUDP_binded, (char*) &adj, 65000/*MAXBUFLEN-1*/, 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	length_1D = numVertices*numVertices;  //remember to use this when you send to P
+	//sample display
+	cout<<"Received the matrix as 1D\n";
+	for(auto x = 0; x < length_1D; x++){
+		cout<<adj.adj_m[x]<<" ";
+	}
+	cout<<endl;
+	// for(auto x = 0; x < )
+	//buf[nbytes] = '\0';
+	// cout<<"obj.a="<<obj.a<<endl;
+	// cout<<"obj.b="<<obj.b<<endl;
+	// printf("obj.names=%s\n",obj.names);
+
+		// for(auto p = 0;p<10;p++){
+		// 	cout << p << " : ";
+		// 	for(auto q = 0; q<3;q++)
+		// 		 cout << obj.arr[p][q] << " ";
+		// 	cout << "\n";	
+		// }
+		// for(auto p = 0;p<40;p++){
+		// 	cout << p << " : ";
+		// 		 cout << obj.arr[p] << " ";
+		// 	cout << "\n";	
+		// }
+		
+	//printf("listener: packet contains \"%s \"\n", int_buffer);
+	Connect_to_ServerS();
+	//close(sockfd2); dont close because central server listens to serverS and serverP with this
 
 
 }
 
+
 void Connect_to_ServerT(){
 
-	sockfd1 = 0; //used for UDP connection between central and T
+	sockfdT = 0; //used for UDP connection between central and T
 
 	cout << "Entered connect to serverT\n";
 
@@ -322,7 +482,7 @@ void Connect_to_ServerT(){
 
 	// loop through all the results and make a socket
 	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd1 = socket(p->ai_family, p->ai_socktype,
+		if ((sockfdT = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
 			perror("talker: socket");
 			continue;
@@ -336,14 +496,14 @@ void Connect_to_ServerT(){
 		return;
 	}
 	//char test[] = "ServerT send rec test";
-	if ((nbytes = sendto(sockfd1, clientA_Name, strlen(clientA_Name), 0,
+	if ((nbytes = sendto(sockfdT, clientA_Name, strlen(clientA_Name), 0,
 			 p->ai_addr, p->ai_addrlen)) == -1){
 		perror("talker: sendto");
 		exit(1);
 	}
 	printf("talker: sent %d bytes to server T\n", nbytes);
 
-	if ((nbytes = sendto(sockfd1, clientB_Name, strlen(clientB_Name), 0,
+	if ((nbytes = sendto(sockfdT, clientB_Name, strlen(clientB_Name), 0,
 			 p->ai_addr, p->ai_addrlen)) == -1){
 		perror("talker: sendto");
 		exit(1);
@@ -363,7 +523,7 @@ void Connect_to_ServerT(){
 		// 		s, sizeof s) );
 
 	freeaddrinfo(servinfo);
-	close(sockfd1);
+	close(sockfdT);
 	/*Sending to Server T is done. Now bind socket and wait for reply of
 	graphs and list of nodes*/
 
