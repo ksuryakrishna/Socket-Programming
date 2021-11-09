@@ -24,6 +24,8 @@
 
 #define SERVER_S_PORT "22716"	// the port central server uses to connect to S
 
+#define SERVER_P_PORT "23716"	// the port central server uses to connect to P
+
 #define MY_UDP_PORT "24716"  //the port serverT will be connecting to
 
 #define BACKLOG 10	 // how many pending connections queue will hold
@@ -60,6 +62,7 @@ using namespace std;
     // 	int arr[40];
     // }obj;
     int length_1D = 0; //variable that contains the 1D length of adj matrix
+
     struct numV{	
     	int numstruct;
     }numobj;
@@ -211,6 +214,108 @@ void reap_all_dead_process(){
 		exit(1);
 	}
 }
+
+void Connect_to_ServerP(){
+
+	sockfdP = 0; //used for UDP connection between central and T
+
+	cout << "Entered connect to serverP\n";
+
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+	hints.ai_socktype = SOCK_DGRAM;
+
+	if ((rv = getaddrinfo("127.0.0.1", SERVER_P_PORT, &hints, &servinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		return;
+	}
+
+	// loop through all the results and make a socket
+	for(p = servinfo; p != NULL; p = p->ai_next) {
+		if ((sockfdP = socket(p->ai_family, p->ai_socktype,
+				p->ai_protocol)) == -1) {
+			perror("talker: socket");
+			continue;
+		}
+
+		break;
+	}
+
+	if (p == NULL) {
+		fprintf(stderr, "talker: failed to create socket\n");
+		return;
+	}
+	//char test[] = "ServerT send rec test";
+	// char score_req[] = "Request for score";
+
+//send numVertices, score map, index map, 1d array to serverP
+	// if ((nbytes = sendto(sockfdP, score_req, strlen(score_req), 0,
+	// 		 p->ai_addr, p->ai_addrlen)) == -1){
+	// 	perror("talker: sendto");
+	// 	exit(1);
+	// }
+	// printf("talker: sent %d bytes to server T\n", nbytes);
+
+		{
+		//send numvertices
+			if ((nbytes = sendto(sockfdP, (char*) &numobj, sizeof(numobj), 0,
+					 p->ai_addr, p->ai_addrlen)) == -1) {
+				perror("talker: sendto");
+				exit(1);
+			}
+			printf("talker: sent %d bytes to P\n", nbytes);
+			
+		//send map as struct objs
+			cout<<"Going to send index map";
+			for (auto x = 0; x < numVertices; x++){
+				if ((nbytes = sendto(sockfdP, (char*) &obj[x], sizeof(convert_map_to_struct), 0,
+					 p->ai_addr, p->ai_addrlen)) == -1) {
+					perror("talker: sendto");
+					exit(1);
+				}
+			}
+			printf("talker: sent %d bytes to P\n", nbytes);
+				
+		//send adjacency matrix as 1d
+			cout<<"Going to send matrix\n";
+			if ((nbytes = sendto(sockfdP, (char*) &adj, 65000, 0,
+					 p->ai_addr, p->ai_addrlen)) == -1) {
+				perror("talker: sendto");
+				exit(1);
+			}
+
+		//send score map
+			cout<<" Going to send score_map\n";
+		//send map as struct objs
+			for (auto x = 0; x < numVertices; x++){
+				if ((nbytes = sendto(sockfdP, (char*) &obj_score[x], sizeof(score_map), 0,
+					 p->ai_addr, p->ai_addrlen)) == -1) {
+					perror("talker: sendto");
+					exit(1);
+				}
+				printf("talker: sent %d bytes to P\n", nbytes);
+			}
+		}
+
+		// //sample receive from T
+		// if ((nbytes = recvfrom(sockfd1, buf, MAXBUFLEN-1 , 0,
+		// 	(struct sockaddr *)&their_addr, &sin_size)) == -1) {
+		// 	perror("recvfrom T error");
+		// 	exit(1);
+		// }
+
+		// printf("Received %s, %d from %s \n", buf, nbytes,
+		// 	inet_ntop(their_addr.ss_family,
+		// 		get_in_addr((struct sockaddr *)&their_addr),
+		// 		s, sizeof s) );
+
+	freeaddrinfo(servinfo);
+	close(sockfdP);
+	/*Sending to Server S is done. Now wait for reply of
+	graphs and list of nodes*/
+
+	// Receive_Path_MG_from_ServerP();
+}
 void Receive_score_from_ServerS(){
 	// //Add listener code here and add recv two times(depends on how i receive)
 	// sockfd2 = 0;
@@ -287,11 +392,12 @@ void Receive_score_from_ServerS(){
 		
 	//printf("listener: packet contains \"%s \"\n", int_buffer);
 	
-	//Connect_to_ServerP();
+	Connect_to_ServerP();
 	// close(sockUDP_binded);   //dont close serverP needs it
 
 
 }
+
 void Connect_to_ServerS(){
 
 	sockfdS = 0; //used for UDP connection between central and S
