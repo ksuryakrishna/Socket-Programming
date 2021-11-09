@@ -68,7 +68,7 @@ using namespace std;
     }numobj;
 
 	struct convert_map_to_struct{
-		int keyvalue;
+		int indexvalue;
 		char names[512];
 	}obj[400];
 
@@ -528,7 +528,7 @@ void Receive_graph_from_ServerT(){
 	cout<<"going to display received map \n";
 	//sample display 
 	for(auto x = 0; x<numVertices;x++){
-		cout<<x<<": \t" <<obj[x].keyvalue<<"  "<<obj[x].names<<endl;
+		cout<<x<<": \t" <<obj[x].indexvalue<<"  "<<obj[x].names<<endl;
 	}
 	//now get the matrix
 	printf("listener: waiting to recv adjacency matrix...\n");

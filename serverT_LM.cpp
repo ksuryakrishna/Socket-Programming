@@ -45,7 +45,7 @@ using namespace std;
     }numobj;
 
 	struct convert_map_to_struct{
-		int keyvalue;
+		int indexvalue;
 		char names[512];
 	}obj[400];   
 
@@ -224,7 +224,7 @@ void generate_map(){
 
 	//add the map values on to a struct obj - total numVertices
 	for(i=m.begin(); i!=m.end(), Vertno < cnt; Vertno++, i++){
-		obj[Vertno].keyvalue = i->second;
+		obj[Vertno].indexvalue = i->second;
 		strcpy(obj[Vertno].names, i->first.c_str());
 	}
 	//insert numVertices(cnt) into numstruct
@@ -232,7 +232,7 @@ void generate_map(){
 	cout << "numobj.numstruct (cnt) = "<<numobj.numstruct<<endl;
 	//sample display
 	for(Vertno = 0; Vertno < cnt; Vertno++){
-		cout<<obj[Vertno].keyvalue<<"\t";
+		cout<<obj[Vertno].indexvalue<<"\t";
 		printf("%s\n",obj[Vertno].names);
 	}
 	int index = 0;

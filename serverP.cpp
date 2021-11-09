@@ -13,6 +13,7 @@
 #include <map>
 #include <fstream>
 #include <cstring>
+#include <vector>
 
 using namespace std; 
 
@@ -32,7 +33,17 @@ using namespace std;
 	char s[INET6_ADDRSTRLEN];
 
 	string st1, st2;
-    map<string,int> m; 
+
+	struct details{
+		int score;
+		char names[512];
+	}det;
+
+    // map<int, map<int, string> > m; 
+    // map<int, map<int, string> >::iterator itr1;
+    // map<int, string>::iterator itr2;
+
+    map<int, struct details> m;
     
     // int numVertices = 0;
 	int Vertno = 0;
@@ -45,7 +56,7 @@ using namespace std;
     }numobj;
 
 	struct convert_map_to_struct{
-		int keyvalue;
+		int indexvalue;
 		char names[512];
 	}obj[400];
 
@@ -60,6 +71,8 @@ using namespace std;
 
     int numVertices = 0; //get this from Central through numV struct
 
+    
+
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -70,8 +83,9 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void Connect_to_Central_to_send_score(){
-	//add content of talker here
+
+void Connect_to_Central_to_send_results(){
+
 		memset(&hints, 0, sizeof hints);
 		hints.ai_family = AF_INET; 
 		hints.ai_socktype = SOCK_DGRAM;
@@ -111,15 +125,15 @@ void Connect_to_Central_to_send_score(){
 	// 	}
 	// 	printf("talker: sent %d bytes to central\n", numbytes);
 		
-	//send map as struct objs
-		for (auto x = 0; x < numVertices; x++){
-			if ((numbytes = sendto(sockfd_to_central, (char*) &obj_score[x], sizeof(score_map), 0,
-				 p->ai_addr, p->ai_addrlen)) == -1) {
-				perror("talker: sendto");
-				exit(1);
-			}
-			printf("talker: sent %d bytes to central\n", numbytes);
-		}
+	// //send map as struct objs
+	// 	for (auto x = 0; x < numVertices; x++){
+	// 		if ((numbytes = sendto(sockfd_to_central, (char*) &obj_score[x], sizeof(score_map), 0,
+	// 			 p->ai_addr, p->ai_addrlen)) == -1) {
+	// 			perror("talker: sendto");
+	// 			exit(1);
+	// 		}
+	// 		printf("talker: sent %d bytes to central\n", numbytes);
+	// 	}
 		
 			
 	// //send adjacency matrix
@@ -134,10 +148,6 @@ void Connect_to_Central_to_send_score(){
 
 		// printf("talker: sent %d bytes to central\n", numbytes);
 		close(sockfd_to_central);
-
-}
-
-void Connect_to_Central_to_send_results(){
 
 
 }
@@ -173,7 +183,7 @@ void Recv_from_central(){
 	cout<<"going to display received map \n";
 	//sample display 
 	for(auto x = 0; x<numVertices;x++){
-		cout<<x<<": \t" <<obj[x].keyvalue<<"  "<<obj[x].names<<endl;
+		cout<<x<<": \t" <<obj[x].indexvalue<<"  "<<obj[x].names<<endl;
 	}
 	//now get the matrix
 	printf("listener: waiting to recv adjacency matrix...\n");
@@ -207,14 +217,45 @@ void Recv_from_central(){
 	}
 
 
-	Connect_to_Central_to_send_results();
+	
 
 }
 
+void generate_2d_map(){
+
+    // while(fs>>S){
+	   //  	//cout<<s<<endl;
+	   //  if(!m.count(S)){
+	   //  	m.insert(make_pair(S,cnt));
+	   //  	cnt++;
+	   //  }
+    // }
+    cout << "Creating 2d map...\n";
+
+   //creates the 2d map with index as key and the associated names and scores as values of struct
+	for(auto i = 0; i < numVertices; i++){
+		if(!m.count(obj[i].indexvalue)){
+			if(strcmp(obj[i].names, obj_score[i].names) == 0){   //check this if it works
+				
+				det.score = obj_score[i].score_value;
+				strcpy(det.names,obj[i].names);
+
+				m.insert(make_pair(obj[i].indexvalue, det));
+			}
+
+		}  
+	}
+
+	//sample display of the 2d map thats generated
+    map<int, details>::iterator i;
+    for(auto x = m.begin(); x != m.end(); x++) {
+    	cout<<x->first<<"\t"<<(x->second).score<<"\t"<<(x->second).names<<endl;
+    }
+}
+
+
 int main(){  
      
-		
-
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
 	hints.ai_socktype = SOCK_DGRAM;
@@ -252,6 +293,39 @@ int main(){
 	printf("listener: waiting to recvfrom CENTRAL SERVER...\n");
 
 	Recv_from_central();
+
+	//processing area
+	//obj[] has the index map //obj_score has the score map
+
+	//adj has the 1D Array
+	vector<vector<float>> v( numVertices , vector<float> (numVertices, 0));
+	
+	for(auto i = 0, k = 0; i < numVertices; i++){
+
+		for(auto j = 0; j < numVertices; j++){
+			v[i][j] = adj.adj_m[k];
+			k++;
+		}
+	}
+//sample display of received matrix
+	for(auto i = 0; i < numVertices; i++){
+		cout<<i<<": ";
+		for(auto j = 0; j < numVertices; j++)
+			cout<<v[i][j]<<" ";
+		cout<<endl;
+	}
+
+	//create a map with index as the key1, name and score as value
+	generate_2d_map();
+
+
+	//generate weighted graph
+	
+
+
+
+	// Connect_to_Central_to_send_results();
+	
 
 	// addr_len = sizeof their_addr;
 	// if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
