@@ -14,6 +14,7 @@
 #include <fstream>
 #include <cstring>
 #include <vector>
+#include <limits.h>
 
 using namespace std; 
 
@@ -22,6 +23,8 @@ using namespace std;
 #define CENTRAL_PORT "24716" //the port S uses to connect to central
 
 #define MAXBUFLEN 100
+
+#define MAX 1000
 
 	int sockfd_binded, sockfd_to_central;
 	struct addrinfo hints, *servinfo, *p;
@@ -76,7 +79,7 @@ using namespace std;
 	}obj_score[400];
 
     int numVertices = 0; //get this from Central through numV struct
-
+    vector<int> path_from_src;  //vector to store the path from destination to src if it exists
     
 
 // get sockaddr, IPv4 or IPv6:
@@ -236,6 +239,103 @@ void Recv_from_central(){
 
 }
 
+
+void getpath(int parent_node[], int p){
+
+	if(parent_node[p] == -1)
+		return;
+
+	getpath(parent_node, parent_node[p]);
+
+	path_from_src.push_back(p);
+
+}
+
+int check_parent_n_gap(float dist[], int parent_node[]){
+
+	int dest = index_m.indexB;
+
+	if(dist[dest] >= MAX || dist[dest] < 0){
+		return -1;   //no path found
+	}
+	else { //path found; store the index of the path in reverse order
+		
+		// for(auto x = 0; x < numVertices; x++){
+		// 	path_from_dest[x] = parent_node[dest]; 
+		// }
+		getpath(parent_node, dest);
+		return 0;
+	}
+	
+}
+
+int Min_Distance(float dist[], bool SP_tree[], int numV){
+	
+	// Initialize min value
+	int min = INT_MAX, min_index;
+
+	for (int y = 0; y < numV; y++)
+		if (SP_tree[y] == false &&	dist[y] <= min)
+			min = dist[y], min_index = y;
+
+	return min_index;
+}
+
+int dijkstra(vector <vector<float> > &v, int src, int numV){
+						
+	float dist[numV]; //array to store distance from src to a particular node(index)
+	bool SP_tree[numV]; //array to store whether node(index) is added to minimum spanning tree or not
+	int parent_node[numV];  //array to store the parent node of each index
+	memset(parent_node, 0, sizeof(parent_node));
+	//initialize
+	for (auto x = 0; x < numV; x++)
+	{
+		parent_node[src] = -1;
+		dist[x] = MAX;
+		SP_tree[x] = false;
+	}
+
+	dist[src] = 0;
+
+	for (auto x = 0; x < numV ; x++)
+	{
+		int picked = Min_Distance(dist, SP_tree, numV); //select next node outside of SPT that has the min distance
+
+		SP_tree[picked] = true;
+
+		for (auto y = 0; y < numV; y++){
+
+			if (!SP_tree[y] && v[picked][y] && (dist[picked] + v[picked][y] < dist[y])){
+				parent_node[y] = picked;
+				dist[y] = dist[picked] + v[picked][y];
+			}
+		}
+		//sample display
+		cout<<"picked: "<<picked<<",";
+		for(auto p = 0; p < numV; p++){
+			cout<<"p: "<<dist[p]<<'\t';
+		}
+		cout<<endl;
+	}
+	//sample display
+	cout<<"Parent node:\n";
+	for(auto s = 0; s < numV; s++){
+		cout<< s<<" : "<<parent_node[s]<<'\t';
+	}
+	// print the constructed
+	// distance array
+	// printSolution(dist, numV, parent_node);
+	path_from_src.push_back(src);
+	//send parent node and distance array to a function that checks the path and matching gap
+	int r = check_parent_n_gap(dist, parent_node);
+
+	if(r == -1)
+		return -5;  //-there is no path
+	else
+		return 0;  //path found
+}
+
+
 void generate_2d_map(){
 
     // while(fs>>S){
@@ -357,6 +457,9 @@ int main(){
 			if(i != j && v[i][j] != 0){
 				v[i][j] = matching_gap(i, j);
 			}
+			// else if(i != j && v[i][j] == 0){
+			// 	v[i][j] = MAX;
+			// }
 		}
 	}
 
@@ -370,7 +473,17 @@ int main(){
 		cout<<endl;
 	}
 
+	int result = dijkstra(v, index_m.indexA, numVertices);
 
+	if(result == 0){
+		cout<<"Path found: ";
+		for(auto s = 0; s < path_from_src.size(); s++){
+			cout<<path_from_src[s]<<'\t';
+		}
+	}
+	else if (result == -5){
+		cout<<"Path not found";
+	}
 
 	// Connect_to_Central_to_send_results();
 	
@@ -410,3 +523,4 @@ int main(){
     return 1;
 	
 }
+

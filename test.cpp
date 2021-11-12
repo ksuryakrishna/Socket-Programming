@@ -20,12 +20,14 @@ int minDistance(float dist[],
 	
 	// Initialize min value
 	int min = INT_MAX, min_index;
-
+		for(auto x = 0; x < V; x++){
+			cout<<"x: "<<dist[x]<<'\t';
+		}
+		cout<<endl;
 	for (int v = 0; v < V; v++)
-		if (sptSet[v] == false &&
-				dist[v] <= min)
-			min = dist[v], min_index = v;
-
+		if (sptSet[v] == false && dist[v] <= min)
+			{min = dist[v]; min_index = v;}
+	cout<<".................minindex:"<<min_index;
 	return min_index;
 }
 
@@ -88,7 +90,7 @@ void dijkstra(int graph[V][V], int src)
 	for (int i = 0; i < V; i++)
 	{
 		parent[0] = -1;
-		dist[i] = INT_MAX;
+		dist[i] = 1000000000;
 		sptSet[i] = false;
 	}
 
@@ -106,6 +108,7 @@ void dijkstra(int graph[V][V], int src)
 		// u is always equal to src
 		// in first iteration.
 		int u = minDistance(dist, sptSet);
+		cout<<"u: "<<u<<",\n";
 
 		// Mark the picked vertex
 		// as processed
@@ -129,7 +132,7 @@ void dijkstra(int graph[V][V], int src)
 				parent[v] = u;
 					dist[v] = dist[u] + graph[u][v];
 			}
-			cout<<"u: "<<u<<",";
+			
 		for(auto x = 0; x < V; x++){
 			cout<<"x: "<<dist[x]<<'\t';
 		}
@@ -157,17 +160,39 @@ int main()
 	// 					{0, 0, 2, 0, 0, 0, 6, 7, 0}
 	// 				};
 
-	int graph[V][V] = {{0, 4, INT_MAX, INT_MAX, INT_MAX, INT_MAX, INT_MAX, 8, INT_MAX},
-				{4, 0, 8, INT_MAX, INT_MAX, INT_MAX, INT_MAX, 11, INT_MAX},
-					{INT_MAX, 8, 0, 7, INT_MAX, 4, INT_MAX, INT_MAX, 2},
-					{INT_MAX, INT_MAX, 7, 0, 9, 14, INT_MAX, INT_MAX, INT_MAX},
-					{INT_MAX, INT_MAX, INT_MAX, 9, 0, 10, INT_MAX, INT_MAX, INT_MAX},
-					{INT_MAX, INT_MAX, 4, INT_MAX, 10, 0, 2, INT_MAX, INT_MAX},
-					{INT_MAX, INT_MAX, INT_MAX, 14, INT_MAX, 2, 0, 1, 6},
-					{8, 11, INT_MAX, INT_MAX, INT_MAX, INT_MAX, 1, 0, 7},
-					{INT_MAX, INT_MAX, 2, INT_MAX, INT_MAX, INT_MAX, 6, 7, 0}
+	// int graph[V][V] = {{0, 4, INT_MAX, INT_MAX, INT_MAX, INT_MAX, INT_MAX, 8, INT_MAX},
+	// 			{4, 0, 8, INT_MAX, INT_MAX, INT_MAX, INT_MAX, 11, INT_MAX},
+	// 				{INT_MAX, 8, 0, 7, INT_MAX, 4, INT_MAX, INT_MAX, 2},
+	// 				{INT_MAX, INT_MAX, 7, 0, 9, 14, INT_MAX, INT_MAX, INT_MAX},
+	// 				{INT_MAX, INT_MAX, INT_MAX, 9, 0, 10, INT_MAX, INT_MAX, INT_MAX},
+	// 				{INT_MAX, INT_MAX, 4, INT_MAX, 10, 0, 2, INT_MAX, INT_MAX},
+	// 				{INT_MAX, INT_MAX, INT_MAX, 14, INT_MAX, 2, 0, 1, 6},
+	// 				{8, 11, INT_MAX, INT_MAX, INT_MAX, INT_MAX, 1, 0, 7},
+	// 				{INT_MAX, INT_MAX, 2, INT_MAX, INT_MAX, INT_MAX, 6, 7, 0}
+	// 			};
+
+	// int graph[V][V] = {{0, 4, 1000, 1000, 1000, 1000, 1000, 8, 1000},
+	// 			{4, 0, 8, 1000, 1000, 1000, 1000, 11, 1000},
+	// 				{1000, 8, 0, 1000, 1000, 1000, 1000, 1000, 2},
+	// 				{1000, 1000, 1000, 0, 9, 14, 1000, 1000, 1000},
+	// 				{1000, 1000, 1000, 9, 0, 10, 1000, 1000, 1000},
+	// 				{1000, 1000, 1000, 1000, 10, 0, 1000, 1000, 1000},
+	// 				{1000, 1000, 1000, 14, 1000, 1000, 0, 1, 6},
+	// 				{8, 11, 1000, 1000, 1000, 1000, 1, 0, 7},
+	// 				{1000, 1000, 2, 1000, 1000, 1000, 6, 7, 0}
+	// 			};
+
+	int graph[V][V] = {{0, 4, 1000000000, 1000000000, 1000000000, 1000000000, 1000000000, 8, 1000000000},
+					{4, 0, 8, 1000000000, 1000000000, 1000000000, 1000000000, 11, 1000000000},
+					{1000000000, 8, 0, 1000000000, 1000000000, 1000000000, 1000000000, 1000000000, 2},
+					{1000000000, 1000000000, 1000000000, 0, 9, 14, 1000000000, 1000000000, 1000000000},
+					{1000000000, 1000000000, 1000000000, 9, 0, 10, 1000000000, 1000000000, 1000000000},
+					{1000000000, 1000000000, 1000000000, 14, 10, 0, 1000000000, 1000000000, 1000000000},
+					{1000000000, 1000000000, 1000000000, 1000000000, 1000000000, 1000000000, 0, 1, 6},
+					{8, 11, 1000000000, 1000000000, 1000000000, 1000000000, 1, 0, 7},
+					{1000000000, 1000000000, 2, 1000000000, 1000000000, 1000000000, 6, 7, 0}
 				};
 
-	dijkstra(graph, 0);
+	dijkstra(graph, 2);
 	return 0;
 }
