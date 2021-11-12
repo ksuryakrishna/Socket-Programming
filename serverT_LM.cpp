@@ -16,6 +16,7 @@
 #include <map>
 #include <fstream>
 #include <cstring>
+#include <sstream>
 
 using namespace std; 
 
@@ -53,6 +54,12 @@ using namespace std;
 		int adj_m[160000];
 	}adj;
 
+	struct index_matrix{
+		int indexA;
+		int indexB;
+		int indexC;
+	}index_m;
+
 //declaration for map generation
 	string S;
 	string file_name="edgelist.txt";
@@ -60,6 +67,8 @@ using namespace std;
     
     fstream fs(file_name);   
     int cnt = 0, Vertno = 0;
+
+    char clientA_Name[200], clientB_Name[200];
 
 class Graph {
    private:
@@ -162,13 +171,20 @@ void Connect_to_Central_to_send_graph(){
 		printf("talker: sent %d bytes to central\n", numbytes);
 			
 	//send adjacency matrix
-		cout<<"Going to send matrix";
+		cout<<"Going to send matrix\n";
 		if ((numbytes = sendto(sockfd, (char*) &adj, 65000, 0,
 				 p->ai_addr, p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
-
+	//send index of the given clients
+		cout<<"going to send index_M\n";
+		if ((numbytes = sendto(sockfd, (char*) &index_m, sizeof(index_matrix), 0,
+				 p->ai_addr, p->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
+		printf("talker: sent %d bytes to central\n", numbytes);
 		freeaddrinfo(servinfo);
 
 		printf("talker: sent %d bytes to central\n", numbytes);
@@ -302,6 +318,17 @@ int main(void)
 	printf("listener: packet is %d bytes long\n", numbytes);
 	buf[numbytes] = '\0';
 	printf("listener: packet contains \"%s\"\n", buf);
+	
+	strcpy(clientA_Name, buf);
+
+//look up index for clientA and clientB and send to central
+	stringstream ss1,ss2;
+	string temp;
+	ss1 << clientA_Name;
+    ss1 >> temp; 
+
+    auto it = m.find(temp);
+    index_m.indexA = it->second;
 
 	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
@@ -317,6 +344,16 @@ int main(void)
 	buf[numbytes] = '\0';
 	printf("listener: packet contains \"%s\"\n", buf);	
 
+	strcpy(clientB_Name, buf);
+
+	ss2 << clientB_Name;
+    ss2 >> temp; 
+
+    it = m.find(temp);
+    index_m.indexB = it->second;   //send these to central
+    index_m.indexC = -1;  // -1 for now (use this while doing the bonus part)
+	//sample display
+    cout << "indexA: " << index_m.indexA << endl << "indexB: " << index_m.indexB << endl;
 // received the two usernames up until this point
 
 	

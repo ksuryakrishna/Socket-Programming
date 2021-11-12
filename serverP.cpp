@@ -64,6 +64,12 @@ using namespace std;
 		int adj_m[160000];
 	}adj;
 
+	struct index_matrix{
+		int indexA;
+		int indexB;
+		int indexC;
+	}index_m;
+
 	struct score_map{
 		int score_value;
 		char names[512];
@@ -216,8 +222,17 @@ void Recv_from_central(){
 		cout<<x<<": \t" <<obj_score[x].score_value<<"  "<<obj_score[x].names<<endl;
 	}
 
+	//index from central
+	addr_len = sizeof their_addr;
+	if ((numbytes = recvfrom(sockfd_binded, (char*) &index_m, sizeof(index_matrix)/*MAXBUFLEN-1*/, 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}	
+	//sample display
+	cout<<"Received the indexs\n";
 
-	
+	cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<endl;
 
 }
 
@@ -252,7 +267,24 @@ void generate_2d_map(){
     	cout<<x->first<<"\t"<<(x->second).score<<"\t"<<(x->second).names<<endl;
     }
 }
+//function that calculates matching gap
+float matching_gap(int i, int j){
+	
+	int scoreI = 0, scoreJ = 0;
 
+	auto it = m.find(i);
+	scoreI = (it->second).score;
+
+	it = m.find(j);
+	scoreJ = (it->second).score;
+
+	float match_gap = (scoreI - scoreJ);
+	if(match_gap < 0)
+		match_gap *= -1;
+	match_gap /= (scoreI + scoreJ);
+
+	return match_gap;
+}
 
 int main(){  
      
@@ -320,7 +352,23 @@ int main(){
 
 
 	//generate weighted graph
-	
+	for(auto i = 0; i < numVertices; i++){
+		for(auto j = 0; j < numVertices; j++){
+			if(i != j && v[i][j] != 0){
+				v[i][j] = matching_gap(i, j);
+			}
+		}
+	}
+
+
+	//sample display of weighted matrix
+	cout<<endl<<"weighted matrix\n";
+	for(auto i = 0; i < numVertices; i++){
+		cout<<i<<": ";
+		for(auto j = 0; j < numVertices; j++)
+			cout<<v[i][j]<<" ";
+		cout<<endl;
+	}
 
 
 

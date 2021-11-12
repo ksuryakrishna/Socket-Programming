@@ -81,6 +81,12 @@ using namespace std;
 		char names[512];
 	}obj_score[400];
 
+	struct index_matrix{
+		int indexA;
+		int indexB;
+		int indexC;
+	}index_m;
+
     int numVertices = 0; //get this from T through numV struct
 
 void sigchld_handler(int s)
@@ -295,6 +301,15 @@ void Connect_to_ServerP(){
 				}
 				printf("talker: sent %d bytes to P\n", nbytes);
 			}
+
+			cout<<"going to send index list\n";
+
+			if ((nbytes = sendto(sockfdP, (char*) &index_m, sizeof(index_matrix), 0,
+				 p->ai_addr, p->ai_addrlen)) == -1) {
+				perror("talker: sendto");
+				exit(1);
+			}
+			printf("talker: sent %d bytes to P\n", nbytes);			
 		}
 
 		// //sample receive from T
@@ -545,6 +560,16 @@ void Receive_graph_from_ServerT(){
 		cout<<adj.adj_m[x]<<" ";
 	}
 	cout<<endl;
+
+	addr_len = sizeof their_addr;
+	if ((nbytes = recvfrom(sockUDP_binded, (char*) &index_m, sizeof(index_matrix)/*MAXBUFLEN-1*/, 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	cout<<"Received the indexs\n";
+
+	cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<endl;
 	// for(auto x = 0; x < )
 	//buf[nbytes] = '\0';
 	// cout<<"obj.a="<<obj.a<<endl;
