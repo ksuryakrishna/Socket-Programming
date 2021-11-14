@@ -25,7 +25,7 @@ using namespace std;
 #define CENTRAL_PORT "24716" //the port T uses to connect to central
 #define MAXBUFLEN 100
 
-	int sockfd;
+	int sockfd_binded, sockfd;
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	int numbytes;
@@ -280,14 +280,14 @@ int main(void)
 
 	// loop through all the results and bind to the first we can
 	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
+		if ((sockfd_binded = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
 			perror("listener: socket");
 			continue;
 		}
 
-		if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-			close(sockfd);
+		if (bind(sockfd_binded, p->ai_addr, p->ai_addrlen) == -1) {
+			close(sockfd_binded);
 			perror("listener: bind");
 			continue;
 		}
@@ -302,71 +302,74 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
-	printf("listener: waiting to recvfrom...\n");
+	while(1){
 
-	addr_len = sizeof their_addr;
-	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
-		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
-		exit(1);
+		printf("listener: waiting to recvfrom...\n");
+
+		addr_len = sizeof their_addr;
+		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+
+		printf("listener: got packet from %s\n",
+			inet_ntop(their_addr.ss_family,
+				get_in_addr((struct sockaddr *)&their_addr),
+				s, sizeof s));
+		printf("listener: packet is %d bytes long\n", numbytes);
+		buf[numbytes] = '\0';
+		printf("listener: packet contains \"%s\"\n", buf);
+		
+		strcpy(clientA_Name, buf);
+
+	//look up index for clientA and clientB and send to central
+		stringstream ss1,ss2;
+		string temp;
+		ss1 << clientA_Name;
+	    ss1 >> temp; 
+
+	    auto it = m.find(temp);
+	    index_m.indexA = it->second;
+
+		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+		
+		printf("listener: got packet from %s\n",
+			inet_ntop(their_addr.ss_family,
+				get_in_addr((struct sockaddr *)&their_addr),
+				s, sizeof s));
+		printf("listener: packet is %d bytes long\n", numbytes);
+		buf[numbytes] = '\0';
+		printf("listener: packet contains \"%s\"\n", buf);	
+
+		strcpy(clientB_Name, buf);
+
+		ss2 << clientB_Name;
+	    ss2 >> temp; 
+
+	    it = m.find(temp);
+	    index_m.indexB = it->second;   //send these to central
+	    index_m.indexC = -1;  // -1 for now (use this while doing the bonus part)
+		//sample display
+	    cout << "indexA: " << index_m.indexA << endl << "indexB: " << index_m.indexB << endl;
+	// received the two usernames up until this point
+
+		
+		//sample msg sent as reply to central server
+		// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
+		// 		 p->ai_addr, p->ai_addrlen)) == -1){
+		// 	perror("T sends to central error: sendto");
+		// 	exit(1);
+		// }	
+		// close(sockfd);
+
+
+		Connect_to_Central_to_send_graph();
 	}
-
-	printf("listener: got packet from %s\n",
-		inet_ntop(their_addr.ss_family,
-			get_in_addr((struct sockaddr *)&their_addr),
-			s, sizeof s));
-	printf("listener: packet is %d bytes long\n", numbytes);
-	buf[numbytes] = '\0';
-	printf("listener: packet contains \"%s\"\n", buf);
 	
-	strcpy(clientA_Name, buf);
-
-//look up index for clientA and clientB and send to central
-	stringstream ss1,ss2;
-	string temp;
-	ss1 << clientA_Name;
-    ss1 >> temp; 
-
-    auto it = m.find(temp);
-    index_m.indexA = it->second;
-
-	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
-		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
-		exit(1);
-	}
-	
-	printf("listener: got packet from %s\n",
-		inet_ntop(their_addr.ss_family,
-			get_in_addr((struct sockaddr *)&their_addr),
-			s, sizeof s));
-	printf("listener: packet is %d bytes long\n", numbytes);
-	buf[numbytes] = '\0';
-	printf("listener: packet contains \"%s\"\n", buf);	
-
-	strcpy(clientB_Name, buf);
-
-	ss2 << clientB_Name;
-    ss2 >> temp; 
-
-    it = m.find(temp);
-    index_m.indexB = it->second;   //send these to central
-    index_m.indexC = -1;  // -1 for now (use this while doing the bonus part)
-	//sample display
-    cout << "indexA: " << index_m.indexA << endl << "indexB: " << index_m.indexB << endl;
-// received the two usernames up until this point
-
-	
-	//sample msg sent as reply to central server
-	// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
-	// 		 p->ai_addr, p->ai_addrlen)) == -1){
-	// 	perror("T sends to central error: sendto");
-	// 	exit(1);
-	// }	
-	close(sockfd);
-
-
-	Connect_to_Central_to_send_graph();
-
 	return 0;
 }

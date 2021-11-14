@@ -18,6 +18,15 @@
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
 
+	struct numVP{
+		int numVinP;
+		float match_gap;
+	}NVP;
+
+	struct vert_in_path{
+		char names[512];
+	}VIP[400];
+
 using namespace std;
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -84,14 +93,34 @@ int main(int argc, char *argv[])
 		perror("Error sending clientB Name to ServerC");
 	}
 	cout << "Waiting to receive\n";
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-	    perror("recv");
+	if ((numbytes = recv(sockfd, (char*) &NVP, sizeof(NVP), 0)) == -1) {
+	    perror("recv: from ServerC NVP");
 	    exit(1);
 	}
 
-	buf[numbytes] = '\0';
+	cout << "NumVinP: " << NVP.numVinP << endl;
 
-	printf("client: received '%s'\n",buf);
+	if(NVP.numVinP != -1){
+		cout<<"PATH: ";
+		for (auto x = 0; x < NVP.numVinP; x++){
+			if ((numbytes = recv(sockfd, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
+			    perror("recv: from ServerC VIP");
+			    exit(1);
+			}
+		}
+	}
+	else{
+		cout << "PATH not found";
+	}
+
+	int k = 0;
+	for(k = 0; k < NVP.numVinP - 1; k++){
+		cout << VIP[k].names << "--->";
+	}
+
+	cout << VIP[k].names << endl;
+
+	cout <<  "Matching GAP = " << NVP.match_gap;
 
 	close(sockfd);
 

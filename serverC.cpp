@@ -52,7 +52,7 @@ using namespace std;
 
     char buf[512];    // buffer for client data
     int nbytes;
-
+	int pathfound = 0;  //-1 - path not found, 1- path found
     int clientA_rec = 0, clientB_rec = 0;
     //end - select inclusion declaration
     // struct sample{
@@ -86,6 +86,15 @@ using namespace std;
 		int indexB;
 		int indexC;
 	}index_m;
+
+	struct numVP{
+		int numVinP;
+		float match_gap;
+	}NVP;
+
+	struct vert_in_path{
+		char names[512];
+	}VIP[400];
 
     int numVertices = 0; //get this from T through numV struct
 
@@ -221,6 +230,44 @@ void reap_all_dead_process(){
 	}
 }
 
+void Receive_Path_MG_from_ServerP(){
+
+	printf("listener: waiting to recvfrom serverP...\n");
+
+	//char int_buffer[25];	
+	//receive the no. of vertices in this path
+
+	addr_len = sizeof their_addr;
+	if ((nbytes = recvfrom(sockUDP_binded, (char*) &NVP, sizeof(NVP)/*MAXBUFLEN-1*/, 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	if(NVP.numVinP != -1){
+		pathfound = 1;
+		for(auto x = 0; x < NVP.numVinP; x++){
+			addr_len = sizeof their_addr;
+			if ((nbytes = recvfrom(sockUDP_binded, (char*) &VIP[x], sizeof(vert_in_path)/*MAXBUFLEN-1*/, 0,
+				(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+				perror("recvfrom");
+				exit(1);
+			}
+		}
+		cout<<"going to display received path \n";
+		//sample display 
+		for(auto x = 0; x < NVP.numVinP; x++){
+			cout<<x<<": \t" <<VIP[x].names<<endl;
+		}		
+	}
+	else{
+		pathfound = -1;
+		cout<<"Path not found by serverT";
+	}
+
+
+
+}
+
 void Connect_to_ServerP(){
 
 	sockfdP = 0; //used for UDP connection between central and T
@@ -329,7 +376,7 @@ void Connect_to_ServerP(){
 	/*Sending to Server S is done. Now wait for reply of
 	graphs and list of nodes*/
 
-	// Receive_Path_MG_from_ServerP();
+	Receive_Path_MG_from_ServerP();
 }
 void Receive_score_from_ServerS(){
 	// //Add listener code here and add recv two times(depends on how i receive)
@@ -661,6 +708,46 @@ void Connect_to_ServerT(){
 	Receive_graph_from_ServerT();
 }
 
+void Send_Results_to_ClientA(){
+
+	if((nbytes = send(new_fd1, (char*) &NVP, sizeof(NVP), 0)) == -1){
+		perror("Error sending NVP to clientA");
+	}
+	printf("talker: sent %d bytes to clientA\n", nbytes);
+
+	if(pathfound == 1){
+		for (auto x = 0; x < NVP.numVinP; x++){
+			if ((nbytes = send(new_fd1, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
+				perror("central to clientA error");
+				exit(1);
+			}
+			printf("talker: sent %d clientA\n", nbytes);
+		}
+	}
+
+	close(new_fd1);
+}
+
+void Send_Results_to_ClientB(){
+
+	if((nbytes = send(new_fd2, (char*) &NVP, sizeof(NVP), 0)) == -1){
+		perror("Error sending NVP to clientB");
+	}
+	printf("talker: sent %d bytes to clientB\n", nbytes);
+
+	if(pathfound == 1){
+		for (auto x = NVP.numVinP - 1; x >= 0; x--){
+			if ((nbytes = send(new_fd2, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
+				perror("central to clientB error");
+				exit(1);
+			}
+			printf("talker: sent %d clientB\n", nbytes);
+		}
+	}
+
+	close(new_fd2);
+	clientA_rec = 0; clientB_rec = 0;
+}
 
 int main(void)
 {
@@ -720,11 +807,11 @@ int main(void)
 				clientA_rec = 1;
 				if (clientA_rec == 1 && clientB_rec == 1){
 					//cout << "Can start UDP";
-					FD_CLR(sockfd1, &master);
-					FD_CLR(sockfd2, &master);
-					res = close(sockfd1);
-					//cout<<"res1:"<<res;
-					res = close(sockfd2); 
+					// FD_CLR(sockfd1, &master);
+					// FD_CLR(sockfd2, &master);
+					// res = close(sockfd1);
+					// //cout<<"res1:"<<res;
+					// res = close(sockfd2); 
 					//cout<<"\nres2:"<<res;
 
 					Connect_to_ServerT();
@@ -766,17 +853,21 @@ int main(void)
 
 				if (clientA_rec == 1 && clientB_rec == 1){
 					//cout << "Can start UDP";
-					FD_CLR(sockfd1, &master);
-					FD_CLR(sockfd2, &master);
-					res = close(sockfd1);
+					// FD_CLR(sockfd1, &master);
+					// FD_CLR(sockfd2, &master);
+					//res = close(sockfd1);
 					//cout<<"res1:"<<res;
-					res = close(sockfd2); 
+					//res = close(sockfd2); 
 					//cout<<"\nres2:"<<res;
 
 					Connect_to_ServerT();
 				}
 			}	
-			cout<<clientB_rec<<"\tClient B msg received\n";				
+			cout<<clientB_rec<<"\tClient B msg received\n";	
+
+			Send_Results_to_ClientA();
+			Send_Results_to_ClientB();
+			close(sockUDP_binded);
 		}
 
 	}

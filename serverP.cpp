@@ -49,8 +49,7 @@ using namespace std;
     map<int, struct details> m;
     
     // int numVertices = 0;
-	int Vertno = 0;
-
+	int Vertno = 0, pathfound = 0;  //-1 - path not found, 1- path found
 
     int length_1D = 0; //variable that contains the 1D length of adj matrix
 
@@ -78,9 +77,19 @@ using namespace std;
 		char names[512];
 	}obj_score[400];
 
+	struct numVP{
+		int numVinP;
+		float match_gap;
+	}NVP;
+
+	struct vert_in_path{
+		char names[512];
+	}VIP[400];
+
     int numVertices = 0; //get this from Central through numV struct
     vector<int> path_from_src;  //vector to store the path from destination to src if it exists
-    
+    vector<string> path_from_src_as_names;
+    vector<float> dist_vector;
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -126,33 +135,25 @@ void Connect_to_Central_to_send_results(){
 		// 	for(auto q = 0; q<3;q++)
 		// 		obj.arr[p][q] = p;
 
-	// //send numvertices
-	// 	if ((numbytes = sendto(sockfd_to_central, (char*) &numobj, sizeof(numobj), 0,
-	// 			 p->ai_addr, p->ai_addrlen)) == -1) {
-	// 		perror("talker: sendto");
-	// 		exit(1);
-	// 	}
-	// 	printf("talker: sent %d bytes to central\n", numbytes);
+	//send numverticesin path
+		if ((numbytes = sendto(sockfd_to_central, (char*) &NVP, sizeof(NVP), 0,
+				 p->ai_addr, p->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
+		printf("talker: sent %d bytes to central\n", numbytes);
 		
-	// //send map as struct objs
-	// 	for (auto x = 0; x < numVertices; x++){
-	// 		if ((numbytes = sendto(sockfd_to_central, (char*) &obj_score[x], sizeof(score_map), 0,
-	// 			 p->ai_addr, p->ai_addrlen)) == -1) {
-	// 			perror("talker: sendto");
-	// 			exit(1);
-	// 		}
-	// 		printf("talker: sent %d bytes to central\n", numbytes);
-	// 	}
-		
-			
-	// //send adjacency matrix
-	// 	cout<<"Going to send matrix";
-	// 	if ((numbytes = sendto(sockfd_to_central, (char*) &adj, 65000, 0,
-	// 			 p->ai_addr, p->ai_addrlen)) == -1) {
-	// 		perror("talker: sendto");
-	// 		exit(1);
-	// 	}
-
+	//send vertices as structs
+		if(pathfound != -1){
+			for (auto x = 0; x < NVP.numVinP; x++){
+				if ((numbytes = sendto(sockfd_to_central, (char*) &VIP[x], sizeof(vert_in_path), 0,
+					 p->ai_addr, p->ai_addrlen)) == -1) {
+					perror("talker: sendto");
+					exit(1);
+				}
+				printf("talker: sent %d bytes to central\n", numbytes);
+			}
+		}
 		freeaddrinfo(servinfo);
 
 		// printf("talker: sent %d bytes to central\n", numbytes);
@@ -329,6 +330,10 @@ int dijkstra(vector <vector<float> > &v, int src, int numV){
 	//send parent node and distance array to a function that checks the path and matching gap
 	int r = check_parent_n_gap(dist, parent_node);
 
+	for(auto q = 0; q < numV; q++){
+		dist_vector.push_back(dist[q]);
+	}
+
 	if(r == -1)
 		return -5;  //-there is no path
 	else
@@ -422,71 +427,106 @@ int main(){
 
 	freeaddrinfo(servinfo);
 
-	printf("listener: waiting to recvfrom CENTRAL SERVER...\n");
+	while(1){
 
-	Recv_from_central();
+		printf("listener: waiting to recvfrom CENTRAL SERVER...\n");
 
-	//processing area
-	//obj[] has the index map //obj_score has the score map
+		Recv_from_central();
 
-	//adj has the 1D Array
-	vector<vector<float>> v( numVertices , vector<float> (numVertices, 0));
-	
-	for(auto i = 0, k = 0; i < numVertices; i++){
+		//processing area
+		//obj[] has the index map //obj_score has the score map
 
-		for(auto j = 0; j < numVertices; j++){
-			v[i][j] = adj.adj_m[k];
-			k++;
-		}
-	}
-//sample display of received matrix
-	for(auto i = 0; i < numVertices; i++){
-		cout<<i<<": ";
-		for(auto j = 0; j < numVertices; j++)
-			cout<<v[i][j]<<" ";
-		cout<<endl;
-	}
+		//adj has the 1D Array
+		vector<vector<float>> v( numVertices , vector<float> (numVertices, 0));
+		
+		for(auto i = 0, k = 0; i < numVertices; i++){
 
-	//create a map with index as the key1, name and score as value
-	generate_2d_map();
-
-
-	//generate weighted graph
-	for(auto i = 0; i < numVertices; i++){
-		for(auto j = 0; j < numVertices; j++){
-			if(i != j && v[i][j] != 0){
-				v[i][j] = matching_gap(i, j);
+			for(auto j = 0; j < numVertices; j++){
+				v[i][j] = adj.adj_m[k];
+				k++;
 			}
-			// else if(i != j && v[i][j] == 0){
-			// 	v[i][j] = MAX;
-			// }
 		}
-	}
-
-
-	//sample display of weighted matrix
-	cout<<endl<<"weighted matrix\n";
-	for(auto i = 0; i < numVertices; i++){
-		cout<<i<<": ";
-		for(auto j = 0; j < numVertices; j++)
-			cout<<v[i][j]<<" ";
-		cout<<endl;
-	}
-
-	int result = dijkstra(v, index_m.indexA, numVertices);
-
-	if(result == 0){
-		cout<<"Path found: ";
-		for(auto s = 0; s < path_from_src.size(); s++){
-			cout<<path_from_src[s]<<'\t';
+	//sample display of received matrix
+		for(auto i = 0; i < numVertices; i++){
+			cout<<i<<": ";
+			for(auto j = 0; j < numVertices; j++)
+				cout<<v[i][j]<<" ";
+			cout<<endl;
 		}
-	}
-	else if (result == -5){
-		cout<<"Path not found";
-	}
 
-	// Connect_to_Central_to_send_results();
-	
+		//create a map with index as the key1, name and score as value
+		generate_2d_map();
+
+
+		//generate weighted graph
+		for(auto i = 0; i < numVertices; i++){
+			for(auto j = 0; j < numVertices; j++){
+				if(i != j && v[i][j] != 0){
+					v[i][j] = matching_gap(i, j);
+				}
+				// else if(i != j && v[i][j] == 0){
+				// 	v[i][j] = MAX;
+				// }
+			}
+		}
+
+
+		//sample display of weighted matrix
+		cout<<endl<<"weighted matrix\n";
+		for(auto i = 0; i < numVertices; i++){
+			cout<<i<<": ";
+			for(auto j = 0; j < numVertices; j++)
+				cout<<v[i][j]<<" ";
+			cout<<endl;
+		}
+
+		int result = dijkstra(v, index_m.indexA, numVertices);
+
+
+	//sample display
+		if(result == 0){
+			cout<<"Path found: ";
+			for(auto s = 0; s < path_from_src.size(); s++){
+				cout<<path_from_src[s]<<'\t';
+			}
+		}
+		else if (result == -5){
+			cout<<"Path not found";
+		}
+
+		NVP.numVinP = 0;
+
+		if(result == 0){//path found
+			pathfound = 1;
+			//give the indexes to the map and get the names to send to central
+			for(auto s = 0; s < path_from_src.size(); s++){
+				auto it = m.find(path_from_src[s]);
+				path_from_src_as_names.push_back((it->second).names);	
+			}
+			cout<<"\n PAth Names:";
+			for(auto s = 0; s < path_from_src_as_names.size(); s++)	
+				cout<<path_from_src_as_names[s]<<'\t';
+
+			NVP.numVinP = path_from_src_as_names.size();
+			NVP.match_gap = dist_vector[index_m.indexB];
+		}
+		else if (result == -5){ //path not found
+			pathfound = -1;
+			NVP.numVinP = -1;
+			cout<<"Path not found";
+		}
+
+		//load the names in this struct
+		for(auto s = 0; s < path_from_src_as_names.size(); s++){
+			strcpy(VIP[s].names, path_from_src_as_names[s].c_str());
+		}
+
+		Connect_to_Central_to_send_results();
+
+		path_from_src_as_names.clear();
+		path_from_src.clear();
+		dist_vector.clear();
+	}	
 
 	// addr_len = sizeof their_addr;
 	// if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
@@ -512,7 +552,7 @@ int main(){
 	// 	perror("T sends to central error: sendto");
 	// 	exit(1);
 	// }	
-	close(sockfd_binded);  //finally remove this, dont close because server should be 
+	//close(sockfd_binded);  //finally remove this, dont close because server should be 
 	//continously listening on the binded socket
 
 

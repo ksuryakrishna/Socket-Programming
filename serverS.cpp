@@ -191,39 +191,41 @@ int main(){
 
 	freeaddrinfo(servinfo);
 
-	printf("listener: waiting to recvfrom...\n");
+	while(1){
 
-	addr_len = sizeof their_addr;
-	if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
-		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
-		exit(1);
+		printf("listener: waiting to recvfrom...\n");
+
+		addr_len = sizeof their_addr;
+		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+
+		printf("listener: got packet from %s\n",
+			inet_ntop(their_addr.ss_family,
+				get_in_addr((struct sockaddr *)&their_addr),
+				s, sizeof s));
+		printf("listener: packet is %d bytes long\n", numbytes);
+		buf[numbytes] = '\0';
+		printf("listener: packet contains \"%s\"\n", buf);
+
+	// received the two usernames up until this point
+
+		
+		//sample msg sent as reply to central server
+		// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
+		// 		 p->ai_addr, p->ai_addrlen)) == -1){
+		// 	perror("T sends to central error: sendto");
+		// 	exit(1);
+		// }	
+		//close(sockfd_binded);  //finally remove this, dont close because server should be 
+		//continously listening on the binded socket
+
+
+		Connect_to_Central_to_send_score();	
+
 	}
-
-	printf("listener: got packet from %s\n",
-		inet_ntop(their_addr.ss_family,
-			get_in_addr((struct sockaddr *)&their_addr),
-			s, sizeof s));
-	printf("listener: packet is %d bytes long\n", numbytes);
-	buf[numbytes] = '\0';
-	printf("listener: packet contains \"%s\"\n", buf);
-
-// received the two usernames up until this point
-
-	
-	//sample msg sent as reply to central server
-	// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
-	// 		 p->ai_addr, p->ai_addrlen)) == -1){
-	// 	perror("T sends to central error: sendto");
-	// 	exit(1);
-	// }	
-	close(sockfd_binded);  //finally remove this, dont close because server should be 
-	//continously listening on the binded socket
-
-
-	Connect_to_Central_to_send_score();	
-
-
 
     return 1;
 	
