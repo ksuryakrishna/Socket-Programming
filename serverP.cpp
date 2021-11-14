@@ -22,9 +22,9 @@ using namespace std;
 
 #define CENTRAL_PORT "24716" //the port S uses to connect to central
 
-#define MAXBUFLEN 100
+#define MAXBUFLEN 512
 
-#define MAX 1000
+#define MAX 1000000000
 
 	int sockfd_binded, sockfd_to_central;
 	struct addrinfo hints, *servinfo, *p;
@@ -273,11 +273,13 @@ int check_parent_n_gap(float dist[], int parent_node[]){
 int Min_Distance(float dist[], bool SP_tree[], int numV){
 	
 	// Initialize min value
-	int min = INT_MAX, min_index;
+	float min = INT_MAX, min_index;
 
 	for (int y = 0; y < numV; y++)
-		if (SP_tree[y] == false &&	dist[y] <= min)
-			min = dist[y], min_index = y;
+		if (SP_tree[y] == false &&	dist[y] <= min){
+			min = dist[y]; min_index = y;
+			// cout<<y<<'\t'<<min<<'\t'<<min_index<<endl;
+		}
 
 	return min_index;
 }
@@ -302,8 +304,11 @@ int dijkstra(vector <vector<float> > &v, int src, int numV){
 	{
 		int picked = Min_Distance(dist, SP_tree, numV); //select next node outside of SPT that has the min distance
 
+		// cout << "picked: "<<picked<<endl;
 		SP_tree[picked] = true;
-
+		// for(auto n = 0; n < numV; n++)
+		// 	cout<<"##"<<SP_tree[n];
+		// cout<<endl;
 		for (auto y = 0; y < numV; y++){
 
 			if (!SP_tree[y] && v[picked][y] && (dist[picked] + v[picked][y] < dist[y])){
@@ -427,12 +432,15 @@ int main(){
 
 	freeaddrinfo(servinfo);
 
+	printf("The ServerP is up and running using UDP on port 23716.\n");
+
 	while(1){
 
 		printf("listener: waiting to recvfrom CENTRAL SERVER...\n");
 
 		Recv_from_central();
 
+		printf("The ServerP received the topology and score information.\n");
 		//processing area
 		//obj[] has the index map //obj_score has the score map
 
@@ -514,6 +522,7 @@ int main(){
 			pathfound = -1;
 			NVP.numVinP = -1;
 			cout<<"Path not found";
+			NVP.match_gap = 0;
 		}
 
 		//load the names in this struct
@@ -523,6 +532,7 @@ int main(){
 
 		Connect_to_Central_to_send_results();
 
+		printf("The ServerP finished sending the results to the Central.\n");
 		path_from_src_as_names.clear();
 		path_from_src.clear();
 		dist_vector.clear();

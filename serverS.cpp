@@ -20,7 +20,7 @@ using namespace std;
 
 #define CENTRAL_PORT "24716" //the port S uses to connect to central
 
-#define MAXBUFLEN 100
+#define MAXBUFLEN 512
 
 	int sockfd_binded, sockfd_to_central;
 	struct addrinfo hints, *servinfo, *p;
@@ -191,6 +191,8 @@ int main(){
 
 	freeaddrinfo(servinfo);
 
+	printf("The ServerS is up and running using UDP on port 22716.\n");
+
 	while(1){
 
 		printf("listener: waiting to recvfrom...\n");
@@ -211,7 +213,7 @@ int main(){
 		printf("listener: packet contains \"%s\"\n", buf);
 
 	// received the two usernames up until this point
-
+		printf("The ServerS received a request from Central to get the scores.\n");
 		
 		//sample msg sent as reply to central server
 		// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
@@ -224,7 +226,7 @@ int main(){
 
 
 		Connect_to_Central_to_send_score();	
-
+		printf("The ServerS finished sending the scores to Central.\n");
 	}
 
     return 1;

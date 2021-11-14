@@ -16,7 +16,7 @@
 
 #define PORT "26716" // the port client will be connecting to 
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define MAXDATASIZE 512 // max number of bytes we can get at once
 
 	struct numVP{
 		int numVinP;
@@ -26,6 +26,8 @@
 	struct vert_in_path{
 		char names[512];
 	}VIP[400];
+
+char clientA_Name[512]; 
 
 using namespace std;
 // get sockaddr, IPv4 or IPv6:
@@ -82,6 +84,8 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
+	printf("The client is up and running.\n");
+
 	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 			s, sizeof s);
 	printf("client: connecting to %s\n", s);
@@ -92,6 +96,8 @@ int main(int argc, char *argv[])
 	if(send(sockfd, argv[1], sizeof argv[1], 0) == -1){
 		perror("Error sending clientB Name to ServerC");
 	}
+	printf("The client sent %s to the Central server.\n", argv[1]);
+
 	cout << "Waiting to receive\n";
 	if ((numbytes = recv(sockfd, (char*) &NVP, sizeof(NVP), 0)) == -1) {
 	    perror("recv: from ServerC NVP");
@@ -101,26 +107,32 @@ int main(int argc, char *argv[])
 	cout << "NumVinP: " << NVP.numVinP << endl;
 
 	if(NVP.numVinP != -1){
-		cout<<"PATH: ";
+		// cout<<"PATH: ";
 		for (auto x = 0; x < NVP.numVinP; x++){
 			if ((numbytes = recv(sockfd, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
 			    perror("recv: from ServerC VIP");
 			    exit(1);
 			}
 		}
+		printf("Found compatibility for %s and %s\n", VIP[0].names, VIP[NVP.numVinP - 1].names);
+
+		int k = 0;
+		for(k = 0; k < NVP.numVinP - 1; k++){
+			cout << VIP[k].names << " --- ";
+		}
+
+		cout << VIP[k].names << endl;
+
+		cout <<  "Matching Gap: " << NVP.match_gap << endl;
+
 	}
 	else{
-		cout << "PATH not found";
+		if ((numbytes = recv(sockfd, clientA_Name, sizeof clientA_Name, 0)) == -1) {
+		    perror("recv: from ServerC VIP");
+		    exit(1);
+		}
+		printf("Found no compatibility for %s and %s\n", argv[1], clientA_Name);
 	}
-
-	int k = 0;
-	for(k = 0; k < NVP.numVinP - 1; k++){
-		cout << VIP[k].names << "--->";
-	}
-
-	cout << VIP[k].names << endl;
-
-	cout <<  "Matching GAP = " << NVP.match_gap;
 
 	close(sockfd);
 

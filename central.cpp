@@ -30,7 +30,7 @@
 
 #define BACKLOG 10	 // how many pending connections queue will hold
 
-#define MAXBUFLEN 100
+#define MAXBUFLEN 512
 
 using namespace std;
 
@@ -41,7 +41,7 @@ using namespace std;
 	struct sigaction sa;
 
 	char s[INET6_ADDRSTRLEN];
-	char clientA_Name[200], clientB_Name[200];
+	char clientA_Name[512], clientB_Name[512];
 	int yes=1;			// for setsockopt() SO_REUSEADDR, below
 	int i, j, rv, res;
 
@@ -264,7 +264,7 @@ void Receive_Path_MG_from_ServerP(){
 		cout<<"Path not found by serverT";
 	}
 
-
+	printf("The Central server received the results from backend server P.\n");
 
 }
 
@@ -371,6 +371,8 @@ void Connect_to_ServerP(){
 		// 		get_in_addr((struct sockaddr *)&their_addr),
 		// 		s, sizeof s) );
 
+	printf("The Central server sent a processing request to Backend-Server P.\n");
+	
 	freeaddrinfo(servinfo);
 	close(sockfdP);
 	/*Sending to Server S is done. Now wait for reply of
@@ -378,6 +380,7 @@ void Connect_to_ServerP(){
 
 	Receive_Path_MG_from_ServerP();
 }
+
 void Receive_score_from_ServerS(){
 	// //Add listener code here and add recv two times(depends on how i receive)
 	// sockfd2 = 0;
@@ -433,7 +436,7 @@ void Receive_score_from_ServerS(){
 		cout<<x<<": \t" <<obj_score[x].score_value<<"  "<<obj_score[x].names<<endl;
 	}
 
-
+	printf("The Central server received information from Backend-Server S using UDP over port 24716. \n");
 	// for(auto x = 0; x < )
 	//buf[nbytes] = '\0';
 	// cout<<"obj.a="<<obj.a<<endl;
@@ -512,6 +515,8 @@ void Connect_to_ServerS(){
 		// 	inet_ntop(their_addr.ss_family,
 		// 		get_in_addr((struct sockaddr *)&their_addr),
 		// 		s, sizeof s) );
+
+	printf("The Central server sent a request to Backend-Server S.\n");
 
 	freeaddrinfo(servinfo);
 	close(sockfdS);
@@ -634,7 +639,8 @@ void Receive_graph_from_ServerT(){
 		// 		 cout << obj.arr[p] << " ";
 		// 	cout << "\n";	
 		// }
-		
+	printf("The Central server received information from Backend-Server T using UDP over port 24716.\n");
+
 	//printf("listener: packet contains \"%s \"\n", int_buffer);
 	Connect_to_ServerS();
 	//close(sockfd2); dont close because central server listens to serverS and serverP with this
@@ -700,6 +706,8 @@ void Connect_to_ServerT(){
 		// 		get_in_addr((struct sockaddr *)&their_addr),
 		// 		s, sizeof s) );
 
+	printf("The Central server sent a request to Backend-Server T\n");
+
 	freeaddrinfo(servinfo);
 	close(sockfdT);
 	/*Sending to Server T is done. Now bind socket and wait for reply of
@@ -724,7 +732,16 @@ void Send_Results_to_ClientA(){
 			printf("talker: sent %d clientA\n", nbytes);
 		}
 	}
+	else{
+		//send clientB name
+		if ((nbytes = send(new_fd1, clientB_Name, sizeof clientB_Name, 0)) == -1) {
+			perror("central to clientA error");
+			exit(1);
+		}		
 
+	}
+
+	printf("The Central server sent the results to client A.\n");
 	close(new_fd1);
 }
 
@@ -744,7 +761,16 @@ void Send_Results_to_ClientB(){
 			printf("talker: sent %d clientB\n", nbytes);
 		}
 	}
+	else{
+		//send clientB name
+		if ((nbytes = send(new_fd2, clientA_Name, sizeof clientA_Name, 0)) == -1) {
+			perror("central to clientB error");
+			exit(1);
+		}		
 
+	}	
+
+	printf("The Central server sent the results to client B.\n");
 	close(new_fd2);
 	clientA_rec = 0; clientB_rec = 0;
 }
@@ -804,7 +830,11 @@ int main(void)
 				//store value in buf as clientA;
 				strcpy(clientA_Name, buf);
 				printf("%s\n",clientA_Name);
+
+				printf("The Central server received input=%s from the client using TCP over port 25716.\n", clientA_Name);
+
 				clientA_rec = 1;
+
 				if (clientA_rec == 1 && clientB_rec == 1){
 					//cout << "Can start UDP";
 					// FD_CLR(sockfd1, &master);
@@ -849,6 +879,9 @@ int main(void)
 				//store value in buf as clientB;
 				strcpy(clientB_Name, buf);
 				printf("%s\n",clientB_Name);
+
+				printf("The Central server received input=%s from the client using TCP over	port 25716. \n", clientA_Name);
+
 				clientB_rec = 1;
 
 				if (clientA_rec == 1 && clientB_rec == 1){

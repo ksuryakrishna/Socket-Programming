@@ -23,7 +23,8 @@ using namespace std;
 #define MYPORT "21716"	// the port users will be connecting to
 
 #define CENTRAL_PORT "24716" //the port T uses to connect to central
-#define MAXBUFLEN 100
+
+#define MAXBUFLEN 512
 
 	int sockfd_binded, sockfd;
 	struct addrinfo hints, *servinfo, *p;
@@ -302,6 +303,8 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
+	printf("The ServerT is up and running using UDP on port 21716.\n");
+
 	while(1){
 
 		printf("listener: waiting to recvfrom...\n");
@@ -348,6 +351,8 @@ int main(void)
 
 		strcpy(clientB_Name, buf);
 
+		printf("The ServerT received a request from Central to get the topology.\n");
+
 		ss2 << clientB_Name;
 	    ss2 >> temp; 
 
@@ -369,6 +374,8 @@ int main(void)
 
 
 		Connect_to_Central_to_send_graph();
+
+		printf("The ServerT finished sending the topology to Central.\n");
 	}
 	
 	return 0;
