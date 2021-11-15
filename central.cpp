@@ -54,6 +54,7 @@ using namespace std;
     int nbytes;
 	int pathfound = 0;  //-1 - path not found, 1- path found
     int clientA_rec = 0, clientB_rec = 0;
+    int clientA_done = 0, clientB_done = 0;
     //end - select inclusion declaration
     // struct sample{
     // 	int a;
@@ -773,10 +774,12 @@ void Send_Results_to_ClientB(){
 	printf("The Central server sent the results to client B.\n");
 	close(new_fd2);
 	clientA_rec = 0; clientB_rec = 0;
+	clientA_done = 0; clientB_done = 0;
 }
 
 int main(void)
 {
+
     FD_ZERO(&master);    // clear the master and temp sets
     FD_ZERO(&read_fds);
 
@@ -848,6 +851,7 @@ int main(void)
 				}				
 			}
 			cout<<clientA_rec<<"\tClient A msg received\n";	
+			clientA_done = 1;
 		}	
 
 		if(FD_ISSET(sockfd2, &read_fds)){
@@ -897,12 +901,14 @@ int main(void)
 				}
 			}	
 			cout<<clientB_rec<<"\tClient B msg received\n";	
+			clientB_done = 1;
 
+		}
+		if(clientA_done && clientB_done){
 			Send_Results_to_ClientA();
 			Send_Results_to_ClientB();
 			close(sockUDP_binded);
 		}
-
 	}
 	return 0;
 }
