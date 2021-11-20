@@ -21,16 +21,17 @@
 	struct numVP{
 		int numVinP;
 		float match_gap;
-	}NVP;
+	}NVP1, NVP2;
 
 	struct vert_in_path{
 		char names[512];
-	}VIP[400];
+	}VIP1[400], VIP2[400];
 
-char clientB_Name[512];
+char clientB_Name1[512], clientB_Name2[512];
 
 using namespace std;
 
+char numUsernames[] = "1";
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -101,42 +102,130 @@ int main(int argc, char *argv[])
 	printf("The client sent %s to the Central server.\n", argv[1]);
 
 	cout << "Waiting to receive\n";
-	if ((numbytes = recv(sockfd, (char*) &NVP, sizeof(NVP), 0)) == -1) {
+
+	if ((numbytes = recv(sockfd, numUsernames, 1, 0)) == -1) {
 	    perror("recv: from ServerC NVP");
 	    exit(1);
 	}
+	cout << "numUsernames: " <<numUsernames[0]<<endl;
 
-	cout << "NumVinP: " << NVP.numVinP << endl;
+	if(numUsernames[0] == '1'){
 
-	if(NVP.numVinP != -1){
-		// cout<<"PATH: ";
-		for (auto x = 0; x < NVP.numVinP; x++){
-			if ((numbytes = recv(sockfd, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
+		if ((numbytes = recv(sockfd, (char*) &NVP1, sizeof(NVP1), 0)) == -1) {
+		    perror("recv: from ServerC NVP");
+		    exit(1);
+		}
+
+		cout << "NumVinP: " << NVP1.numVinP << endl;
+
+		if(NVP1.numVinP != -1){
+			// cout<<"PATH: ";
+			for (auto x = 0; x < NVP1.numVinP; x++){
+				if ((numbytes = recv(sockfd, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
+				    perror("recv: from ServerC VIP");
+				    exit(1);
+				}
+			}
+			printf("Found compatibility for %s and %s\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
+
+			int k = 0;
+			for(k = 0; k < NVP1.numVinP - 1; k++){
+				cout << VIP1[k].names << " --- ";
+			}
+
+			cout << VIP1[k].names << endl;
+
+			cout <<  "Matching Gap: " << NVP1.match_gap << endl;
+
+		}
+		else{
+			if ((numbytes = recv(sockfd, clientB_Name1, sizeof clientB_Name1, 0)) == -1) {
 			    perror("recv: from ServerC VIP");
 			    exit(1);
 			}
-		}
-		printf("Found compatibility for %s and %s\n", VIP[0].names, VIP[NVP.numVinP - 1].names);
-
-		int k = 0;
-		for(k = 0; k < NVP.numVinP - 1; k++){
-			cout << VIP[k].names << " --- ";
+			printf("Found no compatibility for %s and %s\n", argv[1], clientB_Name1);
 		}
 
-		cout << VIP[k].names << endl;
-
-		cout <<  "Matching Gap: " << NVP.match_gap << endl;
-
+		close(sockfd);
 	}
-	else{
-		if ((numbytes = recv(sockfd, clientB_Name, sizeof clientB_Name, 0)) == -1) {
-		    perror("recv: from ServerC VIP");
+
+
+
+	else if (numUsernames[0] == '2'){
+//1st path
+		if ((numbytes = recv(sockfd, (char*) &NVP1, sizeof(NVP1), 0)) == -1) {
+		    perror("recv: from ServerC NVP");
 		    exit(1);
 		}
-		printf("Found no compatibility for %s and %s\n", argv[1], clientB_Name);
-	}
 
-	close(sockfd);
+		cout << "NumVinP: " << NVP1.numVinP << endl;
+
+		if(NVP1.numVinP != -1){
+			// cout<<"PATH: ";
+			for (auto x = 0; x < NVP1.numVinP; x++){
+				if ((numbytes = recv(sockfd, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
+				    perror("recv: from ServerC VIP");
+				    exit(1);
+				}
+			}
+			printf("Found compatibility for %s and %s\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
+
+			int k = 0;
+			for(k = 0; k < NVP1.numVinP - 1; k++){
+				cout << VIP1[k].names << " --- ";
+			}
+
+			cout << VIP1[k].names << endl;
+
+			cout <<  "Matching Gap: " << NVP1.match_gap << endl;
+
+		}
+		else{
+			if ((numbytes = recv(sockfd, clientB_Name1, sizeof clientB_Name1, 0)) == -1) {
+			    perror("recv: from ServerC VIP");
+			    exit(1);
+			}
+			printf("Found no compatibility for %s and %s\n", argv[1], clientB_Name1);
+		}
+//2nd path
+		if ((numbytes = recv(sockfd, (char*) &NVP2, sizeof(NVP2), 0)) == -1) {
+		    perror("recv: from ServerC NVP");
+		    exit(1);
+		}
+
+		cout << "NumVinP: " << NVP2.numVinP << endl;
+
+		if(NVP2.numVinP != -1){
+			// cout<<"PATH: ";
+			for (auto x = 0; x < NVP2.numVinP; x++){
+				if ((numbytes = recv(sockfd, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
+				    perror("recv: from ServerC VIP");
+				    exit(1);
+				}
+			}
+			printf("Found compatibility for %s and %s\n", VIP2[0].names, VIP2[NVP2.numVinP - 1].names);
+
+			int k = 0;
+			for(k = 0; k < NVP2.numVinP - 1; k++){
+				cout << VIP2[k].names << " --- ";
+			}
+
+			cout << VIP2[k].names << endl;
+
+			cout <<  "Matching Gap: " << NVP2.match_gap << endl;
+
+		}
+		else{
+			if ((numbytes = recv(sockfd, clientB_Name2, sizeof clientB_Name2, 0)) == -1) {
+			    perror("recv: from ServerC VIP");
+			    exit(1);
+			}
+			printf("Found no compatibility for %s and %s\n", argv[1], clientB_Name2);
+		}
+
+
+		close(sockfd);
+	}
 
 	return 0;
 }

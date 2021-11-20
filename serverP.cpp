@@ -49,7 +49,7 @@ using namespace std;
     map<int, struct details> m;
     
     // int numVertices = 0;
-	int Vertno = 0, pathfound = 0;  //-1 - path not found, 1- path found
+	int Vertno = 0, pathfound1 = 0, pathfound2 = 0;  //-1 - path not found, 1- path found
 
     int length_1D = 0; //variable that contains the 1D length of adj matrix
 
@@ -80,16 +80,16 @@ using namespace std;
 	struct numVP{
 		int numVinP;
 		float match_gap;
-	}NVP;
+	}NVP1, NVP2;
 
 	struct vert_in_path{
 		char names[512];
-	}VIP[400];
+	}VIP1[400], VIP2[400];
 
     int numVertices = 0; //get this from Central through numV struct
-    vector<int> path_from_src;  //vector to store the path from destination to src if it exists
-    vector<string> path_from_src_as_names;
-    vector<float> dist_vector;
+    vector<int> path_from_src1, path_from_src2;  //vector to store the path from destination to src if it exists
+    vector<string> path_from_src_as_names1, path_from_src_as_names2;
+    vector<float> dist_vector1, dist_vector2;
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -128,15 +128,9 @@ void Connect_to_Central_to_send_results(){
 			fprintf(stderr, "talker: failed to create socket\n");
 			return;
 		}
-		// obj.a = 1;
-		// obj.b = 2;
-		// strcpy(obj.names, "Amma");
-		// for(auto p = 0;p<10;p++)
-		// 	for(auto q = 0; q<3;q++)
-		// 		obj.arr[p][q] = p;
 
 	//send numverticesin path
-		if ((numbytes = sendto(sockfd_to_central, (char*) &NVP, sizeof(NVP), 0,
+		if ((numbytes = sendto(sockfd_to_central, (char*) &NVP1, sizeof(NVP1), 0,
 				 p->ai_addr, p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
@@ -144,9 +138,9 @@ void Connect_to_Central_to_send_results(){
 		printf("talker: sent %d bytes to central\n", numbytes);
 		
 	//send vertices as structs
-		if(pathfound != -1){
-			for (auto x = 0; x < NVP.numVinP; x++){
-				if ((numbytes = sendto(sockfd_to_central, (char*) &VIP[x], sizeof(vert_in_path), 0,
+		if(pathfound1 != -1){
+			for (auto x = 0; x < NVP1.numVinP; x++){
+				if ((numbytes = sendto(sockfd_to_central, (char*) &VIP1[x], sizeof(vert_in_path), 0,
 					 p->ai_addr, p->ai_addrlen)) == -1) {
 					perror("talker: sendto");
 					exit(1);
@@ -154,9 +148,32 @@ void Connect_to_Central_to_send_results(){
 				printf("talker: sent %d bytes to central\n", numbytes);
 			}
 		}
+
+		if(index_m.indexC != -1){
+
+			//send numverticesin path
+				if ((numbytes = sendto(sockfd_to_central, (char*) &NVP2, sizeof(NVP2), 0,
+						 p->ai_addr, p->ai_addrlen)) == -1) {
+					perror("talker: sendto");
+					exit(1);
+				}
+				printf("talker: sent %d bytes to central\n", numbytes);
+				
+			//send vertices as structs
+				if(pathfound2 != -1){
+					for (auto x = 0; x < NVP2.numVinP; x++){
+						if ((numbytes = sendto(sockfd_to_central, (char*) &VIP2[x], sizeof(vert_in_path), 0,
+							 p->ai_addr, p->ai_addrlen)) == -1) {
+							perror("talker: sendto");
+							exit(1);
+						}
+						printf("talker: sent %d bytes to central\n", numbytes);
+					}
+				}			
+		}
+
 		freeaddrinfo(servinfo);
 
-		// printf("talker: sent %d bytes to central\n", numbytes);
 		close(sockfd_to_central);
 
 
@@ -236,25 +253,35 @@ void Recv_from_central(){
 	//sample display
 	cout<<"Received the indexs\n";
 
-	cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<endl;
+	cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<"\t indexC: "<<index_m.indexC<<endl;
 
 }
 
 
-void getpath(int parent_node[], int p){
+void getpath(int parent_node[], int p, int dest){
 
 	if(parent_node[p] == -1)
 		return;
 
-	getpath(parent_node, parent_node[p]);
+	getpath(parent_node, parent_node[p], dest);
 
-	path_from_src.push_back(p);
-
+	//cout << "Pushing .... " << p << endl; 
+	printf("Pushing .... %d\n", p );
+	if(index_m.indexC != dest){
+		//cout << "Actual Pushing src1.... " << p << endl;
+		printf("Actual Pushing src1.... %d\n", p );
+		path_from_src1.push_back(p);
+	}
+	else{
+		// cout << "Actual Pushing src2.... " << p << endl;
+		printf("Actual Pushing src2.... %d\n", p );
+		path_from_src2.push_back(p);
+	}
 }
 
-int check_parent_n_gap(float dist[], int parent_node[]){
+int check_parent_n_gap(float dist[], int parent_node[], int dest){
 
-	int dest = index_m.indexB;
+	// int dest = index_m.indexB;
 
 	if(dist[dest] >= MAX || dist[dest] < 0){
 		return -1;   //no path found
@@ -264,7 +291,7 @@ int check_parent_n_gap(float dist[], int parent_node[]){
 		// for(auto x = 0; x < numVertices; x++){
 		// 	path_from_dest[x] = parent_node[dest]; 
 		// }
-		getpath(parent_node, dest);
+		getpath(parent_node, dest, dest);
 		return 0;
 	}
 	
@@ -284,7 +311,7 @@ int Min_Distance(float dist[], bool SP_tree[], int numV){
 	return min_index;
 }
 
-int dijkstra(vector <vector<float> > &v, int src, int numV){
+int dijkstra(vector <vector<float> > &v, int src, int numV, int dest){
 						
 	float dist[numV]; //array to store distance from src to a particular node(index)
 	bool SP_tree[numV]; //array to store whether node(index) is added to minimum spanning tree or not
@@ -331,12 +358,19 @@ int dijkstra(vector <vector<float> > &v, int src, int numV){
 	// print the constructed
 	// distance array
 	// printSolution(dist, numV, parent_node);
-	path_from_src.push_back(src);
+	if(index_m.indexC != dest)
+		path_from_src1.push_back(src);
+	else
+		path_from_src2.push_back(src);
+	// path_from_src.push_back(src);
 	//send parent node and distance array to a function that checks the path and matching gap
-	int r = check_parent_n_gap(dist, parent_node);
+	int r = check_parent_n_gap(dist, parent_node, dest);
 
 	for(auto q = 0; q < numV; q++){
-		dist_vector.push_back(dist[q]);
+		if(index_m.indexC != dest)
+			dist_vector1.push_back(dist[q]);
+		else
+			dist_vector2.push_back(dist[q]);
 	}
 
 	if(r == -1)
@@ -488,87 +522,106 @@ int main(){
 			cout<<endl;
 		}
 
-		int result = dijkstra(v, index_m.indexA, numVertices);
-
+		int result1 = dijkstra(v, index_m.indexA, numVertices, index_m.indexB);
 
 	//sample display
-		if(result == 0){
-			cout<<"Path found: ";
-			for(auto s = 0; s < path_from_src.size(); s++){
-				cout<<path_from_src[s]<<'\t';
+		if(result1 == 0){
+			cout<<"Path found for 1st pair: ";
+			// printf("condn: %d\n", path_from_src1.size() );
+			for(auto s = 0; s < path_from_src1.size(); s++){
+				cout<<path_from_src1[s]<<'\t';
+				// printf("%s\t", path_from_src1[s]);
 			}
 		}
-		else if (result == -5){
-			cout<<"Path not found";
+		else if (result1 == -5){
+			cout<<"Path not found for 1st pair\n";
 		}
+		printf("Reached 1\n");
+		NVP1.numVinP = 0;
 
-		NVP.numVinP = 0;
-
-		if(result == 0){//path found
-			pathfound = 1;
+		if(result1 == 0){//path found
+			pathfound1 = 1;
 			//give the indexes to the map and get the names to send to central
-			for(auto s = 0; s < path_from_src.size(); s++){
-				auto it = m.find(path_from_src[s]);
-				path_from_src_as_names.push_back((it->second).names);	
+			for(auto s = 0; s < path_from_src1.size(); s++){
+				auto it = m.find(path_from_src1[s]);
+				path_from_src_as_names1.push_back((it->second).names);	
 			}
-			cout<<"\n PAth Names:";
-			for(auto s = 0; s < path_from_src_as_names.size(); s++)	
-				cout<<path_from_src_as_names[s]<<'\t';
-
-			NVP.numVinP = path_from_src_as_names.size();
-			NVP.match_gap = dist_vector[index_m.indexB];
+			printf("Reached 1.1\n");
+			cout<<"\n PAth Names for first pair:";
+			for(auto s = 0; s < path_from_src_as_names1.size(); s++)	
+				cout<<path_from_src_as_names1[s]<<'\t';
+			printf("Reached 1.2\n");
+			NVP1.numVinP = path_from_src_as_names1.size();
+			NVP1.match_gap = dist_vector1[index_m.indexB];
+			printf("Reached 1.3\n");
 		}
-		else if (result == -5){ //path not found
-			pathfound = -1;
-			NVP.numVinP = -1;
-			cout<<"Path not found";
-			NVP.match_gap = 0;
+		else if (result1 == -5){ //path not found
+			pathfound1 = -1;
+			NVP1.numVinP = -1;
+			cout<<"Path not found\n";
+			NVP1.match_gap = 0;
 		}
-
+		printf("Reached 2\n");
 		//load the names in this struct
-		for(auto s = 0; s < path_from_src_as_names.size(); s++){
-			strcpy(VIP[s].names, path_from_src_as_names[s].c_str());
+		for(auto s = 0; s < path_from_src_as_names1.size(); s++){
+			strcpy(VIP1[s].names, path_from_src_as_names1[s].c_str());
 		}
+		printf("Reached 3\n");
+		if(index_m.indexC != -1){
+		//sample display
+			int result2 = dijkstra(v, index_m.indexA, numVertices, index_m.indexC);
 
+			if(result2 == 0){
+				cout<<"Path found: ";
+				for(auto s = 0; s < path_from_src2.size(); s++){
+					cout<<path_from_src2[s]<<'\t';
+				}
+			}
+			else if (result2 == -5){
+				cout<<"Path not found\n";
+			}
+
+			NVP2.numVinP = 0;
+
+			if(result2 == 0){//path found
+				pathfound2 = 1;
+				//give the indexes to the map and get the names to send to central
+				for(auto s = 0; s < path_from_src2.size(); s++){
+					auto it = m.find(path_from_src2[s]);
+					path_from_src_as_names2.push_back((it->second).names);	
+				}
+				cout<<"\n PAth Names:";
+				for(auto s = 0; s < path_from_src_as_names2.size(); s++)	
+					cout<<path_from_src_as_names2[s]<<'\t';
+
+				NVP2.numVinP = path_from_src_as_names2.size();
+				NVP2.match_gap = dist_vector2[index_m.indexC];
+			}
+			else if (result2 == -5){ //path not found
+				pathfound2 = -1;
+				NVP2.numVinP = -1;
+				cout<<"Path not found\n";
+				NVP2.match_gap = 0;
+			}
+
+			//load the names in this struct
+			for(auto s = 0; s < path_from_src_as_names2.size(); s++){
+				strcpy(VIP2[s].names, path_from_src_as_names2[s].c_str());
+			}
+
+
+		}
 		Connect_to_Central_to_send_results();
 
 		printf("The ServerP finished sending the results to the Central.\n");
-		path_from_src_as_names.clear();
-		path_from_src.clear();
-		dist_vector.clear();
+
+		path_from_src_as_names1.clear();
+		path_from_src1.clear();
+		dist_vector1.clear();
+		path_from_src_as_names2.clear();
+		path_from_src2.clear();
+		dist_vector2.clear();
 	}	
-
-	// addr_len = sizeof their_addr;
-	// if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
-	// 	(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-	// 	perror("recvfrom");
-	// 	exit(1);
-	// }
-
-	// printf("listener: got packet from %s\n",
-	// 	inet_ntop(their_addr.ss_family,
-	// 		get_in_addr((struct sockaddr *)&their_addr),
-	// 		s, sizeof s));
-	// printf("listener: packet is %d bytes long\n", numbytes);
-	// buf[numbytes] = '\0';
-	// printf("listener: packet contains \"%s\"\n", buf);
-
-// received the two usernames up until this point
-
-	
-	//sample msg sent as reply to central server
-	// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
-	// 		 p->ai_addr, p->ai_addrlen)) == -1){
-	// 	perror("T sends to central error: sendto");
-	// 	exit(1);
-	// }	
-	//close(sockfd_binded);  //finally remove this, dont close because server should be 
-	//continously listening on the binded socket
-
-
-	
-
-
 
     return 1;
 	

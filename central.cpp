@@ -41,7 +41,7 @@ using namespace std;
 	struct sigaction sa;
 
 	char s[INET6_ADDRSTRLEN];
-	char clientA_Name[512], clientB_Name[512];
+	char clientA_Name[512], clientB_Name1[512], clientB_Name2[512];
 	int yes=1;			// for setsockopt() SO_REUSEADDR, below
 	int i, j, rv, res;
 
@@ -52,7 +52,7 @@ using namespace std;
 
     char buf[512];    // buffer for client data
     int nbytes;
-	int pathfound = 0;  //-1 - path not found, 1- path found
+	int pathfound1 = 0, pathfound2 = 0;  //-1 - path not found, 1- path found
     int clientA_rec = 0, clientB_rec = 0;
     int clientA_done = 0, clientB_done = 0;
     //end - select inclusion declaration
@@ -91,13 +91,19 @@ using namespace std;
 	struct numVP{
 		int numVinP;
 		float match_gap;
-	}NVP;
+	}NVP1, NVP2;
 
 	struct vert_in_path{
 		char names[512];
-	}VIP[400];
+	}VIP1[400], VIP2[400];
+
+	struct Bnames{
+		char name[512];
+	}Bnamesobj1, Bnamesobj2;
 
     int numVertices = 0; //get this from T through numV struct
+
+    char numUsernames[] = "1";
 
 void sigchld_handler(int s)
 {
@@ -239,30 +245,61 @@ void Receive_Path_MG_from_ServerP(){
 	//receive the no. of vertices in this path
 
 	addr_len = sizeof their_addr;
-	if ((nbytes = recvfrom(sockUDP_binded, (char*) &NVP, sizeof(NVP)/*MAXBUFLEN-1*/, 0,
+	if ((nbytes = recvfrom(sockUDP_binded, (char*) &NVP1, sizeof(NVP1)/*MAXBUFLEN-1*/, 0,
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 		perror("recvfrom");
 		exit(1);
 	}
-	if(NVP.numVinP != -1){
-		pathfound = 1;
-		for(auto x = 0; x < NVP.numVinP; x++){
+	if(NVP1.numVinP != -1){
+		pathfound1 = 1;
+		for(auto x = 0; x < NVP1.numVinP; x++){
 			addr_len = sizeof their_addr;
-			if ((nbytes = recvfrom(sockUDP_binded, (char*) &VIP[x], sizeof(vert_in_path)/*MAXBUFLEN-1*/, 0,
+			if ((nbytes = recvfrom(sockUDP_binded, (char*) &VIP1[x], sizeof(vert_in_path)/*MAXBUFLEN-1*/, 0,
 				(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 				perror("recvfrom");
 				exit(1);
 			}
 		}
-		cout<<"going to display received path \n";
+		cout<<"going to display received path for username1\n";
 		//sample display 
-		for(auto x = 0; x < NVP.numVinP; x++){
-			cout<<x<<": \t" <<VIP[x].names<<endl;
+		for(auto x = 0; x < NVP1.numVinP; x++){
+			cout<<x<<": \t" <<VIP1[x].names<<endl;
 		}		
 	}
 	else{
-		pathfound = -1;
+		pathfound1 = -1;
 		cout<<"Path not found by serverT";
+	}
+
+	if(index_m.indexC != -1){
+
+		addr_len = sizeof their_addr;
+		if ((nbytes = recvfrom(sockUDP_binded, (char*) &NVP2, sizeof(NVP2)/*MAXBUFLEN-1*/, 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+		if(NVP2.numVinP != -1){
+			pathfound2 = 1;
+			for(auto x = 0; x < NVP2.numVinP; x++){
+				addr_len = sizeof their_addr;
+				if ((nbytes = recvfrom(sockUDP_binded, (char*) &VIP2[x], sizeof(vert_in_path)/*MAXBUFLEN-1*/, 0,
+					(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+					perror("recvfrom");
+					exit(1);
+				}
+			}
+			cout<<"going to display received path for username2 \n";
+			//sample display 
+			for(auto x = 0; x < NVP2.numVinP; x++){
+				cout<<x<<": \t" <<VIP2[x].names<<endl;
+			}		
+		}
+		else{
+			pathfound2 = -1;
+			cout<<"Path not found by serverT for 2nd username";
+		}
+
 	}
 
 	printf("The Central server received the results from backend server P.\n");
@@ -299,16 +336,6 @@ void Connect_to_ServerP(){
 		fprintf(stderr, "talker: failed to create socket\n");
 		return;
 	}
-	//char test[] = "ServerT send rec test";
-	// char score_req[] = "Request for score";
-
-//send numVertices, score map, index map, 1d array to serverP
-	// if ((nbytes = sendto(sockfdP, score_req, strlen(score_req), 0,
-	// 		 p->ai_addr, p->ai_addrlen)) == -1){
-	// 	perror("talker: sendto");
-	// 	exit(1);
-	// }
-	// printf("talker: sent %d bytes to server T\n", nbytes);
 
 		{
 		//send numvertices
@@ -360,18 +387,6 @@ void Connect_to_ServerP(){
 			printf("talker: sent %d bytes to P\n", nbytes);			
 		}
 
-		// //sample receive from T
-		// if ((nbytes = recvfrom(sockfd1, buf, MAXBUFLEN-1 , 0,
-		// 	(struct sockaddr *)&their_addr, &sin_size)) == -1) {
-		// 	perror("recvfrom T error");
-		// 	exit(1);
-		// }
-
-		// printf("Received %s, %d from %s \n", buf, nbytes,
-		// 	inet_ntop(their_addr.ss_family,
-		// 		get_in_addr((struct sockaddr *)&their_addr),
-		// 		s, sizeof s) );
-
 	printf("The Central server sent a processing request to Backend-Server P.\n");
 	
 	freeaddrinfo(servinfo);
@@ -383,42 +398,6 @@ void Connect_to_ServerP(){
 }
 
 void Receive_score_from_ServerS(){
-	// //Add listener code here and add recv two times(depends on how i receive)
-	// sockfd2 = 0;
-
-	// memset(&hints, 0, sizeof hints);
-	// hints.ai_family = AF_INET; // set to AF_INET to use IPv4
-	// hints.ai_socktype = SOCK_DGRAM;
-	// hints.ai_flags = AI_PASSIVE; // use my IP
-
-	// if ((rv = getaddrinfo("127.0.0.1", MY_UDP_PORT, &hints, &servinfo)) != 0) {
-	// 	fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-	// 	return;
-	// }
-
-	// // loop through all the results and bind to the first we can
-	// for(p = servinfo; p != NULL; p = p->ai_next) {
-	// 	if ((sockfd2 = socket(p->ai_family, p->ai_socktype,
-	// 			p->ai_protocol)) == -1) {
-	// 		perror("listener: socket");
-	// 		continue;
-	// 	}
-
-	// 	if (bind(sockfd2, p->ai_addr, p->ai_addrlen) == -1) {
-	// 		close(sockfd2);
-	// 		perror("listener: bind");
-	// 		continue;
-	// 	}
-
-	// 	break;
-	// }
-
-	// if (p == NULL) {
-	// 	fprintf(stderr, "listener: failed to bind socket\n");
-	// 	return;
-	// }
-
-	// freeaddrinfo(servinfo);
 
 	printf("listener: waiting to recvfrom serverS...\n");
 
@@ -438,25 +417,6 @@ void Receive_score_from_ServerS(){
 	}
 
 	printf("The Central server received information from Backend-Server S using UDP over port 24716. \n");
-	// for(auto x = 0; x < )
-	//buf[nbytes] = '\0';
-	// cout<<"obj.a="<<obj.a<<endl;
-	// cout<<"obj.b="<<obj.b<<endl;
-	// printf("obj.names=%s\n",obj.names);
-
-		// for(auto p = 0;p<10;p++){
-		// 	cout << p << " : ";
-		// 	for(auto q = 0; q<3;q++)
-		// 		 cout << obj.arr[p][q] << " ";
-		// 	cout << "\n";	
-		// }
-		// for(auto p = 0;p<40;p++){
-		// 	cout << p << " : ";
-		// 		 cout << obj.arr[p] << " ";
-		// 	cout << "\n";	
-		// }
-		
-	//printf("listener: packet contains \"%s \"\n", int_buffer);
 	
 	Connect_to_ServerP();
 	// close(sockUDP_binded);   //dont close serverP needs it
@@ -503,19 +463,6 @@ void Connect_to_ServerS(){
 		exit(1);
 	}
 	printf("talker: sent %d bytes to server T\n", nbytes);
-
-
-		// //sample receive from T
-		// if ((nbytes = recvfrom(sockfd1, buf, MAXBUFLEN-1 , 0,
-		// 	(struct sockaddr *)&their_addr, &sin_size)) == -1) {
-		// 	perror("recvfrom T error");
-		// 	exit(1);
-		// }
-
-		// printf("Received %s, %d from %s \n", buf, nbytes,
-		// 	inet_ntop(their_addr.ss_family,
-		// 		get_in_addr((struct sockaddr *)&their_addr),
-		// 		s, sizeof s) );
 
 	printf("The Central server sent a request to Backend-Server S.\n");
 
@@ -622,27 +569,10 @@ void Receive_graph_from_ServerT(){
 	}
 	cout<<"Received the indexs\n";
 
-	cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<endl;
-	// for(auto x = 0; x < )
-	//buf[nbytes] = '\0';
-	// cout<<"obj.a="<<obj.a<<endl;
-	// cout<<"obj.b="<<obj.b<<endl;
-	// printf("obj.names=%s\n",obj.names);
+	cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<"\t indexC: "<<index_m.indexC<<endl;
 
-		// for(auto p = 0;p<10;p++){
-		// 	cout << p << " : ";
-		// 	for(auto q = 0; q<3;q++)
-		// 		 cout << obj.arr[p][q] << " ";
-		// 	cout << "\n";	
-		// }
-		// for(auto p = 0;p<40;p++){
-		// 	cout << p << " : ";
-		// 		 cout << obj.arr[p] << " ";
-		// 	cout << "\n";	
-		// }
 	printf("The Central server received information from Backend-Server T using UDP over port 24716.\n");
 
-	//printf("listener: packet contains \"%s \"\n", int_buffer);
 	Connect_to_ServerS();
 	//close(sockfd2); dont close because central server listens to serverS and serverP with this
 
@@ -681,6 +611,14 @@ void Connect_to_ServerT(){
 		return;
 	}
 	//char test[] = "ServerT send rec test";
+
+	if ((nbytes = sendto(sockfdT, numUsernames, strlen(numUsernames), 0,
+			 p->ai_addr, p->ai_addrlen)) == -1){
+		perror("talker: sendto");
+		exit(1);
+	}
+	printf("talker: sent %d bytes to server T\n", nbytes);
+
 	if ((nbytes = sendto(sockfdT, clientA_Name, strlen(clientA_Name), 0,
 			 p->ai_addr, p->ai_addrlen)) == -1){
 		perror("talker: sendto");
@@ -688,24 +626,22 @@ void Connect_to_ServerT(){
 	}
 	printf("talker: sent %d bytes to server T\n", nbytes);
 
-	if ((nbytes = sendto(sockfdT, clientB_Name, strlen(clientB_Name), 0,
+	if ((nbytes = sendto(sockfdT, clientB_Name1, strlen(clientB_Name1), 0,
 			 p->ai_addr, p->ai_addrlen)) == -1){
 		perror("talker: sendto");
 		exit(1);
 	}	
 	printf("talker: sent %d bytes to server T\n", nbytes);
 
-		// //sample receive from T
-		// if ((nbytes = recvfrom(sockfd1, buf, MAXBUFLEN-1 , 0,
-		// 	(struct sockaddr *)&their_addr, &sin_size)) == -1) {
-		// 	perror("recvfrom T error");
-		// 	exit(1);
-		// }
+	if(numUsernames[0] == '2'){
 
-		// printf("Received %s, %d from %s \n", buf, nbytes,
-		// 	inet_ntop(their_addr.ss_family,
-		// 		get_in_addr((struct sockaddr *)&their_addr),
-		// 		s, sizeof s) );
+		if ((nbytes = sendto(sockfdT, clientB_Name2, strlen(clientB_Name2), 0,
+				 p->ai_addr, p->ai_addrlen)) == -1){
+			perror("talker: sendto");
+			exit(1);
+		}	
+		printf("talker: sent %d bytes to server T\n", nbytes);		
+	}
 
 	printf("The Central server sent a request to Backend-Server T\n");
 
@@ -719,14 +655,20 @@ void Connect_to_ServerT(){
 
 void Send_Results_to_ClientA(){
 
-	if((nbytes = send(new_fd1, (char*) &NVP, sizeof(NVP), 0)) == -1){
+	//have to let A know if there are 2 usernames from B
+	if((nbytes = send(new_fd1, numUsernames, 1, 0)) == -1){
+		perror("Error sending numUsernames to clientA");
+	}
+	printf("talker: sent %d bytes to clientA\n", nbytes);
+
+	if((nbytes = send(new_fd1, (char*) &NVP1, sizeof(NVP1), 0)) == -1){
 		perror("Error sending NVP to clientA");
 	}
 	printf("talker: sent %d bytes to clientA\n", nbytes);
 
-	if(pathfound == 1){
-		for (auto x = 0; x < NVP.numVinP; x++){
-			if ((nbytes = send(new_fd1, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
+	if(pathfound1 == 1){
+		for (auto x = 0; x < NVP1.numVinP; x++){
+			if ((nbytes = send(new_fd1, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
 				perror("central to clientA error");
 				exit(1);
 			}
@@ -735,11 +677,37 @@ void Send_Results_to_ClientA(){
 	}
 	else{
 		//send clientB name
-		if ((nbytes = send(new_fd1, clientB_Name, sizeof clientB_Name, 0)) == -1) {
+		if ((nbytes = send(new_fd1, clientB_Name1, sizeof clientB_Name1, 0)) == -1) {
 			perror("central to clientA error");
 			exit(1);
 		}		
 
+	}
+
+	if(index_m.indexC != -1){
+
+		if((nbytes = send(new_fd1, (char*) &NVP2, sizeof(NVP2), 0)) == -1){
+			perror("Error sending NVP to clientB");
+		}
+		printf("talker: sent %d bytes to clientB\n", nbytes);
+
+		if(pathfound2 == 1){
+			for (auto x = 0; x < NVP2.numVinP; x++){
+				if ((nbytes = send(new_fd1, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
+					perror("central to clientB error");
+					exit(1);
+				}
+				printf("talker: sent %d clientB\n", nbytes);
+			}
+		}
+		else{
+			//send clientB name
+			if ((nbytes = send(new_fd1, clientB_Name2, sizeof clientB_Name2, 0)) == -1) {
+				perror("central to clientB error");
+				exit(1);
+			}		
+
+		}		
 	}
 
 	printf("The Central server sent the results to client A.\n");
@@ -748,14 +716,14 @@ void Send_Results_to_ClientA(){
 
 void Send_Results_to_ClientB(){
 
-	if((nbytes = send(new_fd2, (char*) &NVP, sizeof(NVP), 0)) == -1){
+	if((nbytes = send(new_fd2, (char*) &NVP1, sizeof(NVP1), 0)) == -1){
 		perror("Error sending NVP to clientB");
 	}
 	printf("talker: sent %d bytes to clientB\n", nbytes);
 
-	if(pathfound == 1){
-		for (auto x = NVP.numVinP - 1; x >= 0; x--){
-			if ((nbytes = send(new_fd2, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
+	if(pathfound1 == 1){
+		for (auto x = NVP1.numVinP - 1; x >= 0; x--){
+			if ((nbytes = send(new_fd2, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
 				perror("central to clientB error");
 				exit(1);
 			}
@@ -769,6 +737,32 @@ void Send_Results_to_ClientB(){
 			exit(1);
 		}		
 
+	}
+
+	if(index_m.indexC != -1){
+
+		if((nbytes = send(new_fd2, (char*) &NVP2, sizeof(NVP2), 0)) == -1){
+			perror("Error sending NVP to clientB");
+		}
+		printf("talker: sent %d bytes to clientB\n", nbytes);
+
+		if(pathfound2 == 1){
+			for (auto x = NVP2.numVinP - 1; x >= 0; x--){
+				if ((nbytes = send(new_fd2, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
+					perror("central to clientB error");
+					exit(1);
+				}
+				printf("talker: sent %d clientB\n", nbytes);
+			}
+		}
+		else{
+			//send clientB name
+			if ((nbytes = send(new_fd2, clientA_Name, sizeof clientA_Name, 0)) == -1) {
+				perror("central to clientB error");
+				exit(1);
+			}		
+
+		}		
 	}	
 
 	printf("The Central server sent the results to client B.\n");
@@ -839,13 +833,6 @@ int main(void)
 				clientA_rec = 1;
 
 				if (clientA_rec == 1 && clientB_rec == 1){
-					//cout << "Can start UDP";
-					// FD_CLR(sockfd1, &master);
-					// FD_CLR(sockfd2, &master);
-					// res = close(sockfd1);
-					// //cout<<"res1:"<<res;
-					// res = close(sockfd2); 
-					//cout<<"\nres2:"<<res;
 
 					Connect_to_ServerT();
 				}				
@@ -869,7 +856,7 @@ int main(void)
 						s, sizeof s);
 			printf("server: got connection from %s\n", s);
 
-			if (nbytes = recv(new_fd2, buf, sizeof buf, 0) <= 0){
+			if (nbytes = recv(new_fd2, buf, 1, 0) <= 0){
 				// if 0 socket closed other end, -1 is error
 				if(nbytes == 0){
 					cout << "clientA socket closed with ID: " << new_fd2;
@@ -879,32 +866,91 @@ int main(void)
 				//close(new_fd2);
 				//FD_CLR(sockfd2, &master);
 			} else {
-				//data received from client
-				//store value in buf as clientB;
-				strcpy(clientB_Name, buf);
-				printf("%s\n",clientB_Name);
 
-				printf("The Central server received input=%s from the client using TCP over	port 25716. \n", clientA_Name);
+				//receive numUsernames from B
+				numUsernames[0] = buf[0];
+				// memset(buf, 0, sizeof buf);
+				numUsernames[1] = '\0';
+				printf("numUsernames: %s\n", numUsernames);
+				if(numUsernames[0] == '1'){
 
-				clientB_rec = 1;
+					if (nbytes = recv(new_fd2, (char*)&Bnamesobj1, sizeof(Bnames), 0) <= 0){
+						// if 0 socket closed other end, -1 is error
+						if(nbytes == 0){
+							cout << "clientA socket closed with ID: " << new_fd2;
+						}else{
+							perror("recv");
+						}
+					}
+					else{
 
-				if (clientA_rec == 1 && clientB_rec == 1){
-					//cout << "Can start UDP";
-					// FD_CLR(sockfd1, &master);
-					// FD_CLR(sockfd2, &master);
-					//res = close(sockfd1);
-					//cout<<"res1:"<<res;
-					//res = close(sockfd2); 
-					//cout<<"\nres2:"<<res;
+						//data received from client
+						//store value in buf as clientB;
+						strcpy(clientB_Name1, Bnamesobj1.name);
+						printf("%s\n",clientB_Name1);
 
-					Connect_to_ServerT();
+						printf("The Central server received input=%s from the client using TCP over	port 25716. \n", clientB_Name1);
+
+						clientB_rec = 1;
+
+						if (clientA_rec == 1 && clientB_rec == 1){
+
+							Connect_to_ServerT();
+						}
+					}					
 				}
+				if(numUsernames[0] == '2'){
+
+					printf("Reached here\n");
+					if (nbytes = recv(new_fd2, (char*)&Bnamesobj1, sizeof(Bnames), 0) <= 0){
+						// if 0 socket closed other end, -1 is error
+						if(nbytes == 0){
+							cout << "clientA socket closed with ID: " << new_fd2;
+						}else{
+							perror("recv");
+						}
+					}
+					else{
+
+						//data received from client
+						//store value in buf as clientB;
+						strcpy(clientB_Name1, Bnamesobj1.name);
+						// strcpy(clientB_Name2, Bnamesobj.name);
+						printf("The Central server received input = %s from the client using TCP over port 25716. \n", clientB_Name1);
+						
+						if (nbytes = recv(new_fd2, (char*)&Bnamesobj2, sizeof(Bnames), 0) <= 0){
+							// if 0 socket closed other end, -1 is error
+							if(nbytes == 0){
+								cout << "clientA socket closed with ID: " << new_fd2;
+							}else{
+								perror("recv");
+							}
+						}
+						else{
+
+							strcpy(clientB_Name2, Bnamesobj2.name);
+
+							printf("The Central server received input = %s from the client using TCP over port 25716. \n", clientB_Name2);
+
+							clientB_rec = 1;	
+							
+							if (clientA_rec == 1 && clientB_rec == 1){
+
+								Connect_to_ServerT();
+							}
+						}
+
+					}					
+				}
+
 			}	
 			cout<<clientB_rec<<"\tClient B msg received\n";	
 			clientB_done = 1;
 
 		}
+
 		if(clientA_done && clientB_done){
+
 			Send_Results_to_ClientA();
 			Send_Results_to_ClientB();
 			close(sockUDP_binded);

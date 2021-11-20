@@ -21,12 +21,16 @@
 	struct numVP{
 		int numVinP;
 		float match_gap;
-	}NVP;
+	}NVP1, NVP2;
 
 	struct vert_in_path{
 		char names[512];
-	}VIP[400];
+	}VIP1[400], VIP2[400];
 
+	struct Bnames{
+		char name[512];
+	}Bnamesobj1, Bnamesobj2;
+	
 char clientA_Name[512]; 
 
 using namespace std;
@@ -47,8 +51,9 @@ int main(int argc, char *argv[])
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
+	char numUsernames[] = "1"; // default is 1
 
-	if (argc != 2) {
+	if (argc != 2 && argc != 3) {
 	    fprintf(stderr,"usage: client hostname\n");
 	    exit(1);
 	}
@@ -92,49 +97,179 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(servinfo); // all done with this structure
 
+	//
+
+	strcpy(Bnamesobj1.name, argv[1]);
+	if(argc == 3)
+		strcpy(Bnamesobj2.name, argv[2]);
+	else
+		memset(Bnamesobj2.name, 0, sizeof(Bnamesobj2.name));
+	//
 	//send username to serverC here
-	if(send(sockfd, argv[1], sizeof argv[1], 0) == -1){
-		perror("Error sending clientB Name to ServerC");
-	}
-	printf("The client sent %s to the Central server.\n", argv[1]);
+	if(argc == 2){
 
-	cout << "Waiting to receive\n";
-	if ((numbytes = recv(sockfd, (char*) &NVP, sizeof(NVP), 0)) == -1) {
-	    perror("recv: from ServerC NVP");
-	    exit(1);
-	}
+		//notify central of the number of usernames from clientB
+		if(send(sockfd, numUsernames, 1, 0) == -1){
+			perror("Error sending no.of usernames to Central");
+		}
+		printf("The client sent numUsernames: %s to the Central server.\n", numUsernames);
 
-	cout << "NumVinP: " << NVP.numVinP << endl;
+		if(send(sockfd, (char*)&Bnamesobj1, sizeof(Bnames), 0) == -1){
+			perror("Error sending clientB Name1 to ServerC");
+		}
+		printf("The client sent %s to the Central server.\n", Bnamesobj1.name);
+//checked till here
+		cout << "Waiting to receive\n";
+		if ((numbytes = recv(sockfd, (char*) &NVP1, sizeof(NVP1), 0)) == -1) {
+		    perror("recv: from ServerC NVP");
+		    exit(1);
+		}
 
-	if(NVP.numVinP != -1){
-		// cout<<"PATH: ";
-		for (auto x = 0; x < NVP.numVinP; x++){
-			if ((numbytes = recv(sockfd, (char*) &VIP[x], sizeof(vert_in_path), 0)) == -1) {
+		cout << "NumVinP: " << NVP1.numVinP << endl;
+
+		if(NVP1.numVinP != -1){
+			// cout<<"PATH: ";
+			for (auto x = 0; x < NVP1.numVinP; x++){
+				if ((numbytes = recv(sockfd, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
+				    perror("recv: from ServerC VIP");
+				    exit(1);
+				}
+			}
+			printf("Found compatibility for %s and %s\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
+
+			int k = 0;
+			for(k = 0; k < NVP1.numVinP - 1; k++){
+				cout << VIP1[k].names << " --- ";
+			}
+
+			cout << VIP1[k].names << endl;
+
+			cout <<  "Matching Gap: " << NVP1.match_gap << endl;
+
+		}
+		else{
+			if ((numbytes = recv(sockfd, clientA_Name, sizeof clientA_Name, 0)) == -1) {
 			    perror("recv: from ServerC VIP");
 			    exit(1);
 			}
-		}
-		printf("Found compatibility for %s and %s\n", VIP[0].names, VIP[NVP.numVinP - 1].names);
-
-		int k = 0;
-		for(k = 0; k < NVP.numVinP - 1; k++){
-			cout << VIP[k].names << " --- ";
+			printf("Found no compatibility for %s and %s\n", argv[1], clientA_Name);
 		}
 
-		cout << VIP[k].names << endl;
-
-		cout <<  "Matching Gap: " << NVP.match_gap << endl;
-
+		close(sockfd);		
 	}
-	else{
-		if ((numbytes = recv(sockfd, clientA_Name, sizeof clientA_Name, 0)) == -1) {
-		    perror("recv: from ServerC VIP");
+
+
+
+
+	else if(argc == 3){
+
+		numUsernames[0] = '2';
+		//notify central of the number of usernames from clientB
+		if(send(sockfd, numUsernames, 1, 0) == -1){
+			perror("Error sending no.of usernames to Central");
+		}
+		printf("The client sent numUsernames: %s to the Central server.\n", numUsernames);
+
+//send username 1
+		// if(send(sockfd, argv[1], sizeof argv[1], 0) == -1){
+		// 	perror("Error sending clientB Name to ServerC");
+		// }
+		if(send(sockfd, (char*)&Bnamesobj1, sizeof(Bnames), 0) == -1){
+			perror("Error sending clientB Name1 to ServerC");
+		}
+
+//send username 2
+		if(send(sockfd, (char*)&Bnamesobj2, sizeof(Bnames), 0) == -1){
+			perror("Error sending clientB Name2 to ServerC");
+		}
+
+		printf("The client sent %s  and %s to the Central server.\n", Bnamesobj1.name, Bnamesobj2.name);
+		// if(send(sockfd, argv[2], sizeof argv[2], 0) == -1){
+		// 	perror("Error sending clientB Name to ServerC");
+		// }
+		// printf("The client sent %s to the Central server.\n", argv[2]);
+//checked till here
+//sent both usernames
+		
+		cout << "Waiting to receive\n";
+		if ((numbytes = recv(sockfd, (char*) &NVP1, sizeof(NVP1), 0)) == -1) {
+		    perror("recv: from ServerC NVP");
 		    exit(1);
 		}
-		printf("Found no compatibility for %s and %s\n", argv[1], clientA_Name);
+
+		cout << "NumVinP: " << NVP1.numVinP << endl;
+
+		if(NVP1.numVinP != -1){
+			// cout<<"PATH: ";
+			for (auto x = 0; x < NVP1.numVinP; x++){
+				if ((numbytes = recv(sockfd, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
+				    perror("recv: from ServerC VIP");
+				    exit(1);
+				}
+			}
+			printf("Found compatibility for %s and %s\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
+
+			int k = 0;
+			for(k = 0; k < NVP1.numVinP - 1; k++){
+				cout << VIP1[k].names << " --- ";
+			}
+
+			cout << VIP1[k].names << endl;
+
+			cout <<  "Matching Gap: " << NVP1.match_gap << endl;
+
+		}
+		else{
+			if ((numbytes = recv(sockfd, clientA_Name, sizeof clientA_Name, 0)) == -1) {
+			    perror("recv: from ServerC VIP");
+			    exit(1);
+			}
+			printf("Found no compatibility for %s and %s\n", argv[1], clientA_Name);
+		}
+
+		if ((numbytes = recv(sockfd, (char*) &NVP2, sizeof(NVP2), 0)) == -1) {
+		    perror("recv: from ServerC NVP");
+		    exit(1);
+		}
+
+		cout << "NumVinP: " << NVP2.numVinP << endl;
+
+		if(NVP2.numVinP != -1){
+			// cout<<"PATH: ";
+			for (auto x = 0; x < NVP2.numVinP; x++){
+				if ((numbytes = recv(sockfd, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
+				    perror("recv: from ServerC VIP");
+				    exit(1);
+				}
+			}
+			printf("Found compatibility for %s and %s\n", VIP2[0].names, VIP2[NVP2.numVinP - 1].names);
+
+			int k = 0;
+			for(k = 0; k < NVP2.numVinP - 1; k++){
+				cout << VIP2[k].names << " --- ";
+			}
+
+			cout << VIP2[k].names << endl;
+
+			cout <<  "Matching Gap: " << NVP2.match_gap << endl;
+
+		}
+		else{
+			if ((numbytes = recv(sockfd, clientA_Name, sizeof clientA_Name, 0)) == -1) {
+			    perror("recv: from ServerC VIP");
+			    exit(1);
+			}
+			printf("Found no compatibility for %s and %s\n", argv[2], clientA_Name);
+		}
+		close(sockfd);			
 	}
 
-	close(sockfd);
+
+
+
+
+
+
 
 	return 0;
 }

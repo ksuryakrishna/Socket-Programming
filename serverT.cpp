@@ -69,7 +69,9 @@ using namespace std;
     fstream fs(file_name);   
     int cnt = 0, Vertno = 0;
 
-    char clientA_Name[200], clientB_Name[200];
+    char clientA_Name[512], clientB_Name1[512], clientB_Name2[512];
+
+    char numUsernames[] = "1"; 
 
 class Graph {
    private:
@@ -146,12 +148,6 @@ void Connect_to_Central_to_send_graph(){
 			fprintf(stderr, "talker: failed to create socket\n");
 			return;
 		}
-		// obj.a = 1;
-		// obj.b = 2;
-		// strcpy(obj.names, "Amma");
-		// for(auto p = 0;p<10;p++)
-		// 	for(auto q = 0; q<3;q++)
-		// 		obj.arr[p][q] = p;
 
 	//send numvertices
 		if ((numbytes = sendto(sockfd, (char*) &numobj, sizeof(numobj), 0,
@@ -316,22 +312,39 @@ int main(void)
 			exit(1);
 		}
 
+		numUsernames[0] = buf[0];
+
 		printf("listener: got packet from %s\n",
 			inet_ntop(their_addr.ss_family,
 				get_in_addr((struct sockaddr *)&their_addr),
 				s, sizeof s));
 		printf("listener: packet is %d bytes long\n", numbytes);
 		buf[numbytes] = '\0';
-		printf("listener: packet contains \"%s\"\n", buf);
+		printf("numUsernames: \"%s\"\n", numUsernames);
+
+		addr_len = sizeof their_addr;
+		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+
+		printf("listener: got packet from %s\n",
+			inet_ntop(their_addr.ss_family,
+				get_in_addr((struct sockaddr *)&their_addr),
+				s, sizeof s));
+		printf("listener: packet is %d bytes long\n", numbytes);
+		buf[numbytes] = '\0';
+		printf("listener: packet contains clientA_Name: \"%s\"\n", buf);
 		
 		strcpy(clientA_Name, buf);
 
 	//look up index for clientA and clientB and send to central
-		stringstream ss1,ss2;
+		stringstream ss1,ss2,ss3;
 		string temp;
 		ss1 << clientA_Name;
 	    ss1 >> temp; 
-
+		// cout << "temp: "<<temp<<endl;
 	    auto it = m.find(temp);
 	    index_m.indexA = it->second;
 
@@ -347,30 +360,50 @@ int main(void)
 				s, sizeof s));
 		printf("listener: packet is %d bytes long\n", numbytes);
 		buf[numbytes] = '\0';
-		printf("listener: packet contains \"%s\"\n", buf);	
+		printf("listener: packet contains clientB_Name1: \"%s\"\n", buf);	
 
-		strcpy(clientB_Name, buf);
+		strcpy(clientB_Name1, buf);
 
-		printf("The ServerT received a request from Central to get the topology.\n");
-
-		ss2 << clientB_Name;
+		ss2 << clientB_Name1;
 	    ss2 >> temp; 
-
+		// cout << "temp: "<<temp<<endl;
 	    it = m.find(temp);
 	    index_m.indexB = it->second;   //send these to central
-	    index_m.indexC = -1;  // -1 for now (use this while doing the bonus part)
-		//sample display
-	    cout << "indexA: " << index_m.indexA << endl << "indexB: " << index_m.indexB << endl;
-	// received the two usernames up until this point
 
+		index_m.indexC = -1;
 		
-		//sample msg sent as reply to central server
-		// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
-		// 		 p->ai_addr, p->ai_addrlen)) == -1){
-		// 	perror("T sends to central error: sendto");
-		// 	exit(1);
-		// }	
-		// close(sockfd);
+		if(numUsernames[0] == '2'){
+
+			if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
+				(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+				perror("recvfrom");
+				exit(1);
+			}
+			
+			printf("listener: got packet from %s\n",
+				inet_ntop(their_addr.ss_family,
+					get_in_addr((struct sockaddr *)&their_addr),
+					s, sizeof s));
+			printf("listener: packet is %d bytes long\n", numbytes);
+			buf[numbytes] = '\0';
+			printf("listener: packet contains clientB_Name2 \"%s\"\n", buf);	
+
+			strcpy(clientB_Name2, buf);	
+			// printf("test of clientB_Name2: %s\n", clientB_Name2);
+			ss3 << clientB_Name2;
+		    ss3 >> temp; 
+		    // cout << "temp2: "<< temp <<endl;
+		    it = m.find(temp);
+		    // cout<<"it->second:"<<it->second;
+		    index_m.indexC = it->second;		
+		}
+
+		printf("The ServerT received a request from Central to get the topology.\n");
+ 
+		//sample display
+	    cout << "indexA: " << index_m.indexA << endl << "indexB: " << index_m.indexB <<endl<< "indexC: " 
+	    			<< index_m.indexC << endl;
+	// received the two usernames up until this point
 
 
 		Connect_to_Central_to_send_graph();
