@@ -271,7 +271,7 @@ void Receive_Path_MG_from_ServerP(){
 		cout<<"Path not found by serverT";
 	}
 
-	if(index_m.indexC != -1){
+	if(index_m.indexC != -1 && index_m.indexC != -2){
 
 		addr_len = sizeof their_addr;
 		if ((nbytes = recvfrom(sockUDP_binded, (char*) &NVP2, sizeof(NVP2)/*MAXBUFLEN-1*/, 0,
@@ -474,6 +474,134 @@ void Connect_to_ServerS(){
 	Receive_score_from_ServerS();
 }
 
+void Send_Results_to_ClientA(){
+
+	//have to let A know if there are 2 usernames from B
+	if((nbytes = send(new_fd1, numUsernames, 1, 0)) == -1){
+		perror("Error sending numUsernames to clientA");
+	}
+	printf("talker: sent %d bytes to clientA\n", nbytes);
+
+	if((nbytes = send(new_fd1, (char*) &index_m, sizeof(index_m), 0)) == -1){
+		perror("Error sending index to clientA");
+	}
+	printf("talker: sent %d bytes to clientA\n", nbytes);
+
+	if((nbytes = send(new_fd1, (char*) &NVP1, sizeof(NVP1), 0)) == -1){
+		perror("Error sending NVP to clientA");
+	}
+	printf("talker: sent %d bytes to clientA\n", nbytes);
+
+	if(pathfound1 == 1){
+		for (auto x = 0; x < NVP1.numVinP; x++){
+			if ((nbytes = send(new_fd1, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
+				perror("central to clientA error");
+				exit(1);
+			}
+			printf("talker: sent %d clientA\n", nbytes);
+		}
+	}
+	else{
+		//send clientB name
+		if ((nbytes = send(new_fd1, clientB_Name1, sizeof clientB_Name1, 0)) == -1) {
+			perror("central to clientA error");
+			exit(1);
+		}		
+
+	}
+
+	if(index_m.indexC != -1 && index_m.indexC != -2){
+
+		if((nbytes = send(new_fd1, (char*) &NVP2, sizeof(NVP2), 0)) == -1){
+			perror("Error sending NVP to clientB");
+		}
+		printf("talker: sent %d bytes to clientB\n", nbytes);
+
+		if(pathfound2 == 1){
+			for (auto x = 0; x < NVP2.numVinP; x++){
+				if ((nbytes = send(new_fd1, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
+					perror("central to clientB error");
+					exit(1);
+				}
+				printf("talker: sent %d clientB\n", nbytes);
+			}
+		}
+		else{
+			//send clientB name
+			if ((nbytes = send(new_fd1, clientB_Name2, sizeof clientB_Name2, 0)) == -1) {
+				perror("central to clientB error");
+				exit(1);
+			}		
+
+		}		
+	}
+
+	printf("The Central server sent the results to client A.\n");
+	close(new_fd1);
+}
+
+void Send_Results_to_ClientB(){
+
+	if((nbytes = send(new_fd2, (char*) &index_m, sizeof(index_m), 0)) == -1){
+		perror("Error sending index to clientB");
+	}
+	printf("talker: sent %d bytes to clientB\n", nbytes);
+
+	if((nbytes = send(new_fd2, (char*) &NVP1, sizeof(NVP1), 0)) == -1){
+		perror("Error sending NVP to clientB");
+	}
+	printf("talker: sent %d bytes to clientB\n", nbytes);
+
+	if(pathfound1 == 1){
+		for (auto x = NVP1.numVinP - 1; x >= 0; x--){
+			if ((nbytes = send(new_fd2, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
+				perror("central to clientB error");
+				exit(1);
+			}
+			printf("talker: sent %d clientB\n", nbytes);
+		}
+	}
+	else{
+		//send clientB name
+		if ((nbytes = send(new_fd2, clientA_Name, sizeof clientA_Name, 0)) == -1) {
+			perror("central to clientB error");
+			exit(1);
+		}		
+
+	}
+
+	if(index_m.indexC != -1 && index_m.indexC != -2){
+
+		if((nbytes = send(new_fd2, (char*) &NVP2, sizeof(NVP2), 0)) == -1){
+			perror("Error sending NVP to clientB");
+		}
+		printf("talker: sent %d bytes to clientB\n", nbytes);
+
+		if(pathfound2 == 1){
+			for (auto x = NVP2.numVinP - 1; x >= 0; x--){
+				if ((nbytes = send(new_fd2, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
+					perror("central to clientB error");
+					exit(1);
+				}
+				printf("talker: sent %d clientB\n", nbytes);
+			}
+		}
+		else{
+			//send clientB name
+			if ((nbytes = send(new_fd2, clientA_Name, sizeof clientA_Name, 0)) == -1) {
+				perror("central to clientB error");
+				exit(1);
+			}		
+
+		}		
+	}	
+
+	printf("The Central server sent the results to client B.\n");
+	close(new_fd2);
+	clientA_rec = 0; clientB_rec = 0;
+	clientA_done = 0; clientB_done = 0;
+}
+
 void Receive_graph_from_ServerT(){
 	//Add listener code here and add recv two times(depends on how i receive)
 	sockUDP_binded = 0;
@@ -567,6 +695,14 @@ void Receive_graph_from_ServerT(){
 		perror("recvfrom");
 		exit(1);
 	}
+	if(index_m.indexA == -2 || index_m.indexB == -2 || index_m.indexC == -2){
+
+		perror("ENTERED INVALID NAME...EXITING PROGRAM");
+			Send_Results_to_ClientA();
+			Send_Results_to_ClientB();
+			close(sockUDP_binded);
+		exit(1);
+	}
 	cout<<"Received the indexs\n";
 
 	cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<"\t indexC: "<<index_m.indexC<<endl;
@@ -653,123 +789,6 @@ void Connect_to_ServerT(){
 	Receive_graph_from_ServerT();
 }
 
-void Send_Results_to_ClientA(){
-
-	//have to let A know if there are 2 usernames from B
-	if((nbytes = send(new_fd1, numUsernames, 1, 0)) == -1){
-		perror("Error sending numUsernames to clientA");
-	}
-	printf("talker: sent %d bytes to clientA\n", nbytes);
-
-	if((nbytes = send(new_fd1, (char*) &NVP1, sizeof(NVP1), 0)) == -1){
-		perror("Error sending NVP to clientA");
-	}
-	printf("talker: sent %d bytes to clientA\n", nbytes);
-
-	if(pathfound1 == 1){
-		for (auto x = 0; x < NVP1.numVinP; x++){
-			if ((nbytes = send(new_fd1, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
-				perror("central to clientA error");
-				exit(1);
-			}
-			printf("talker: sent %d clientA\n", nbytes);
-		}
-	}
-	else{
-		//send clientB name
-		if ((nbytes = send(new_fd1, clientB_Name1, sizeof clientB_Name1, 0)) == -1) {
-			perror("central to clientA error");
-			exit(1);
-		}		
-
-	}
-
-	if(index_m.indexC != -1){
-
-		if((nbytes = send(new_fd1, (char*) &NVP2, sizeof(NVP2), 0)) == -1){
-			perror("Error sending NVP to clientB");
-		}
-		printf("talker: sent %d bytes to clientB\n", nbytes);
-
-		if(pathfound2 == 1){
-			for (auto x = 0; x < NVP2.numVinP; x++){
-				if ((nbytes = send(new_fd1, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
-					perror("central to clientB error");
-					exit(1);
-				}
-				printf("talker: sent %d clientB\n", nbytes);
-			}
-		}
-		else{
-			//send clientB name
-			if ((nbytes = send(new_fd1, clientB_Name2, sizeof clientB_Name2, 0)) == -1) {
-				perror("central to clientB error");
-				exit(1);
-			}		
-
-		}		
-	}
-
-	printf("The Central server sent the results to client A.\n");
-	close(new_fd1);
-}
-
-void Send_Results_to_ClientB(){
-
-	if((nbytes = send(new_fd2, (char*) &NVP1, sizeof(NVP1), 0)) == -1){
-		perror("Error sending NVP to clientB");
-	}
-	printf("talker: sent %d bytes to clientB\n", nbytes);
-
-	if(pathfound1 == 1){
-		for (auto x = NVP1.numVinP - 1; x >= 0; x--){
-			if ((nbytes = send(new_fd2, (char*) &VIP1[x], sizeof(vert_in_path), 0)) == -1) {
-				perror("central to clientB error");
-				exit(1);
-			}
-			printf("talker: sent %d clientB\n", nbytes);
-		}
-	}
-	else{
-		//send clientB name
-		if ((nbytes = send(new_fd2, clientA_Name, sizeof clientA_Name, 0)) == -1) {
-			perror("central to clientB error");
-			exit(1);
-		}		
-
-	}
-
-	if(index_m.indexC != -1){
-
-		if((nbytes = send(new_fd2, (char*) &NVP2, sizeof(NVP2), 0)) == -1){
-			perror("Error sending NVP to clientB");
-		}
-		printf("talker: sent %d bytes to clientB\n", nbytes);
-
-		if(pathfound2 == 1){
-			for (auto x = NVP2.numVinP - 1; x >= 0; x--){
-				if ((nbytes = send(new_fd2, (char*) &VIP2[x], sizeof(vert_in_path), 0)) == -1) {
-					perror("central to clientB error");
-					exit(1);
-				}
-				printf("talker: sent %d clientB\n", nbytes);
-			}
-		}
-		else{
-			//send clientB name
-			if ((nbytes = send(new_fd2, clientA_Name, sizeof clientA_Name, 0)) == -1) {
-				perror("central to clientB error");
-				exit(1);
-			}		
-
-		}		
-	}	
-
-	printf("The Central server sent the results to client B.\n");
-	close(new_fd2);
-	clientA_rec = 0; clientB_rec = 0;
-	clientA_done = 0; clientB_done = 0;
-}
 
 int main(void)
 {

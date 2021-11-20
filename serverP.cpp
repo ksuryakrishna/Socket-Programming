@@ -149,7 +149,7 @@ void Connect_to_Central_to_send_results(){
 			}
 		}
 
-		if(index_m.indexC != -1){
+		if(index_m.indexC != -1 && index_m.indexC != -2){
 
 			//send numverticesin path
 				if ((numbytes = sendto(sockfd_to_central, (char*) &NVP2, sizeof(NVP2), 0,
@@ -250,6 +250,12 @@ void Recv_from_central(){
 		perror("recvfrom");
 		exit(1);
 	}	
+
+	if(index_m.indexA == -2 || index_m.indexB == -2 || index_m.indexC == -2){
+		perror("ENTERED INVALID NAME...EXITING PROGRAM");
+		exit(1);
+	}
+	
 	//sample display
 	cout<<"Received the indexs\n";
 
@@ -567,7 +573,7 @@ int main(){
 			strcpy(VIP1[s].names, path_from_src_as_names1[s].c_str());
 		}
 		printf("Reached 3\n");
-		if(index_m.indexC != -1){
+		if(index_m.indexC != -1 && index_m.indexC != -2){
 		//sample display
 			int result2 = dijkstra(v, index_m.indexA, numVertices, index_m.indexC);
 

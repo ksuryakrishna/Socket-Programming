@@ -27,7 +27,13 @@
 		char names[512];
 	}VIP1[400], VIP2[400];
 
-char clientB_Name1[512], clientB_Name2[512];
+	struct index_matrix{
+		int indexA;
+		int indexB;
+		int indexC;
+	}index_m;
+
+char clientB_Name1[512], clientB_Name2[512], matching_gap_to_2_dec[40];
 
 using namespace std;
 
@@ -109,6 +115,16 @@ int main(int argc, char *argv[])
 	}
 	cout << "numUsernames: " <<numUsernames[0]<<endl;
 
+	if ((numbytes = recv(sockfd, (char*) &index_m, sizeof(index_m), 0)) == -1) {
+	    perror("recv: from ServerC NVP");
+	    exit(1);
+	}
+
+	if(index_m.indexA == -2 || index_m.indexB == -2 || index_m.indexC == -2){
+		perror("ENTERED INVALID NAME...EXITING PROGRAM");
+		exit(1);
+	}
+
 	if(numUsernames[0] == '1'){
 
 		if ((numbytes = recv(sockfd, (char*) &NVP1, sizeof(NVP1), 0)) == -1) {
@@ -135,7 +151,9 @@ int main(int argc, char *argv[])
 
 			cout << VIP1[k].names << endl;
 
-			cout <<  "Matching Gap: " << NVP1.match_gap << endl;
+			sprintf(matching_gap_to_2_dec, "%0.02f", NVP1.match_gap);
+			cout <<  "Matching Gap: " << matching_gap_to_2_dec << endl;
+			memset(matching_gap_to_2_dec, 0, sizeof(matching_gap_to_2_dec));
 
 		}
 		else{
@@ -177,7 +195,9 @@ int main(int argc, char *argv[])
 
 			cout << VIP1[k].names << endl;
 
-			cout <<  "Matching Gap: " << NVP1.match_gap << endl;
+			sprintf(matching_gap_to_2_dec, "%0.02f", NVP1.match_gap);
+			cout <<  "Matching Gap: " << matching_gap_to_2_dec << endl;
+			memset(matching_gap_to_2_dec, 0, sizeof(matching_gap_to_2_dec));
 
 		}
 		else{
@@ -212,7 +232,9 @@ int main(int argc, char *argv[])
 
 			cout << VIP2[k].names << endl;
 
-			cout <<  "Matching Gap: " << NVP2.match_gap << endl;
+			sprintf(matching_gap_to_2_dec, "%0.02f", NVP2.match_gap);
+			cout <<  "Matching Gap: " << matching_gap_to_2_dec << endl;
+			memset(matching_gap_to_2_dec, 0, sizeof(matching_gap_to_2_dec));
 
 		}
 		else{

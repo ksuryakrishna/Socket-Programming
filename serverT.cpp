@@ -345,8 +345,13 @@ int main(void)
 		ss1 << clientA_Name;
 	    ss1 >> temp; 
 		// cout << "temp: "<<temp<<endl;
-	    auto it = m.find(temp);
-	    index_m.indexA = it->second;
+		auto it = m.find(temp);
+		if(m.count(temp)){
+		    it = m.find(temp);
+		    index_m.indexA = it->second;
+		}
+		else
+			index_m.indexA = -2;
 
 		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
@@ -367,8 +372,13 @@ int main(void)
 		ss2 << clientB_Name1;
 	    ss2 >> temp; 
 		// cout << "temp: "<<temp<<endl;
-	    it = m.find(temp);
-	    index_m.indexB = it->second;   //send these to central
+		if(m.count(temp)){
+			it = m.find(temp);
+	    	index_m.indexB = it->second;   //send these to central	
+		}
+		else
+			index_m.indexB = -2;
+
 
 		index_m.indexC = -1;
 		
@@ -393,9 +403,14 @@ int main(void)
 			ss3 << clientB_Name2;
 		    ss3 >> temp; 
 		    // cout << "temp2: "<< temp <<endl;
-		    it = m.find(temp);
-		    // cout<<"it->second:"<<it->second;
-		    index_m.indexC = it->second;		
+		    if(m.count(temp)){
+			    it = m.find(temp);
+			    // cout<<"it->second:"<<it->second;
+			    index_m.indexC = it->second;
+			}
+			else
+				index_m.indexC = -2;
+
 		}
 
 		printf("The ServerT received a request from Central to get the topology.\n");
