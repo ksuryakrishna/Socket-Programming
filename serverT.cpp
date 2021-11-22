@@ -52,7 +52,7 @@ using namespace std;
 	}obj[400];   
 
 	struct adj_matrix{
-		int adj_m[160000];
+		uint8_t adj_m[160000];
 	}adj;
 
 	struct index_matrix{
