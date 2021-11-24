@@ -1,5 +1,5 @@
 /*
-** listener.c -- a datagram sockets "server" demo
+** serverT.cpp
 */
 #include <iostream>
 #include <stdio.h>
@@ -34,13 +34,6 @@ using namespace std;
 	char buf[MAXBUFLEN];
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
-
-    // struct sample{
-    // 	int a;
-    // 	int b;
-    // 	char names[50];
-    // 	int arr[10][3];
-    // }obj;
 
     struct numV {	
     	int numstruct;
@@ -99,12 +92,7 @@ class Graph {
       cout << "\n";
     }
   }
-  // void return_matrix(int** matrix_to_send){
-  // 	for (int i = 0; i <numVertices; i++){
-  // 		for(int j = 0; j <numVertices; j++)
-  // 			matrix_to_send[i][j] = adjMatrix[i][j];
-  // 	}
-  // }
+  
   // Add edges
   void addEdge(int i, int j) {
     adjMatrix[i][j] = 1;

@@ -33,28 +33,30 @@ using namespace std;
 
 	string st1, st2;
 	string file_name = "scores.txt";
-    map<string,int> m; 
+    map<string,int> m; 		//map created based on string as key and score as value
     
-    int numVertices = 0;
+    int numVertices = 0;	//total no.of vertices
 	int Vertno = 0;
 
     fstream fs(file_name);
 
-    struct score_map{
+    struct score_map{    	//struct to convert map to struct to be sent to central
 		int score_value;
 		char names[512];
 	}obj_score[400];
 
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
+// // get sockaddr, IPv4 or IPv6:
+// void *get_in_addr(struct sockaddr *sa)
+// {
+// 	if (sa->sa_family == AF_INET) {
+// 		return &(((struct sockaddr_in*)sa)->sin_addr);
+// 	}
 
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
+// 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+// }
 
+//function to connect to central through UDP socket and send the scores
+//snippets from Beej's guide is used here to establish connection and use sendto
 void Connect_to_Central_to_send_score(){
 	//add content of talker here
 		memset(&hints, 0, sizeof hints);
@@ -81,20 +83,6 @@ void Connect_to_Central_to_send_score(){
 			fprintf(stderr, "talker: failed to create socket\n");
 			return;
 		}
-		// obj.a = 1;
-		// obj.b = 2;
-		// strcpy(obj.names, "Amma");
-		// for(auto p = 0;p<10;p++)
-		// 	for(auto q = 0; q<3;q++)
-		// 		obj.arr[p][q] = p;
-
-	// //send numvertices
-	// 	if ((numbytes = sendto(sockfd_to_central, (char*) &numobj, sizeof(numobj), 0,
-	// 			 p->ai_addr, p->ai_addrlen)) == -1) {
-	// 		perror("talker: sendto");
-	// 		exit(1);
-	// 	}
-	// 	printf("talker: sent %d bytes to central\n", numbytes);
 		
 	//send map as struct objs
 		for (auto x = 0; x < numVertices; x++){
@@ -103,24 +91,14 @@ void Connect_to_Central_to_send_score(){
 				perror("talker: sendto");
 				exit(1);
 			}
-			printf("talker: sent %d bytes to central\n", numbytes);
+				// printf("talker: sent %d bytes to central\n", numbytes);
 		}
-		
-			
-	// //send adjacency matrix
-	// 	cout<<"Going to send matrix";
-	// 	if ((numbytes = sendto(sockfd_to_central, (char*) &adj, 65000, 0,
-	// 			 p->ai_addr, p->ai_addrlen)) == -1) {
-	// 		perror("talker: sendto");
-	// 		exit(1);
-	// 	}
 
 		freeaddrinfo(servinfo);
-
-		// printf("talker: sent %d bytes to central\n", numbytes);
 		close(sockfd_to_central);
-
 }
+
+//function that reads the contents of score.txt and forms a map based on the names and score
 void generate_score_map(){
 
 	while(fs>>st1){
@@ -133,11 +111,11 @@ void generate_score_map(){
 		}
     }
 
-    //sample display
-    map<string,int>::iterator i;
-    for(i=m.begin();i!=m.end();i++) {
-    	cout<<i->first<<"\t"<<i->second<<endl;
-    }
+	    // //sample display
+	    map<string,int>::iterator i;
+	    // for(i=m.begin();i!=m.end();i++) {
+	    // 	cout<<i->first<<"\t"<<i->second<<endl;
+	    // }
 
     fs.close();
 
@@ -146,19 +124,21 @@ void generate_score_map(){
 		obj_score[Vertno].score_value = i->second;
 		strcpy(obj_score[Vertno].names, i->first.c_str());
 	}
-	//sample display
-	for(Vertno = 0; Vertno < numVertices; Vertno++){
-		cout<<obj_score[Vertno].score_value<<"\t";
-		printf("%s\n",obj_score[Vertno].names);
-	}
+		// //sample display
+		// for(Vertno = 0; Vertno < numVertices; Vertno++){
+		// 	cout<<obj_score[Vertno].score_value<<"\t";
+		// 	printf("%s\n",obj_score[Vertno].names);
+		// }
 }
 
+// the main function 
+// Snippets from Beej's guide are used for binding the UDP socket and listen
 int main(){  
      
 	generate_score_map();	
 
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+	hints.ai_family = AF_INET; 
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
@@ -195,36 +175,18 @@ int main(){
 
 	while(1){
 
-		printf("listener: waiting to recvfrom...\n");
-
 		addr_len = sizeof their_addr;
 		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 			perror("recvfrom");
 			exit(1);
 		}
-
-		printf("listener: got packet from %s\n",
-			inet_ntop(their_addr.ss_family,
-				get_in_addr((struct sockaddr *)&their_addr),
-				s, sizeof s));
-		printf("listener: packet is %d bytes long\n", numbytes);
 		buf[numbytes] = '\0';
-		printf("listener: packet contains \"%s\"\n", buf);
 
 	// received the two usernames up until this point
 		printf("The ServerS received a request from Central to get the scores.\n");
-		
-		//sample msg sent as reply to central server
-		// if ((numbytes = sendto(sockfd, a, strlen(a), 0,
-		// 		 p->ai_addr, p->ai_addrlen)) == -1){
-		// 	perror("T sends to central error: sendto");
-		// 	exit(1);
-		// }	
-		//close(sockfd_binded);  //finally remove this, dont close because server should be 
-		//continously listening on the binded socket
 
-
+//send the score map
 		Connect_to_Central_to_send_score();	
 		printf("The ServerS finished sending the scores to Central.\n");
 	}

@@ -439,7 +439,7 @@ float matching_gap(int i, int j){
 int main(){  
      
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+	hints.ai_family = AF_INET; 
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE; // use my IP
 

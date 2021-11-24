@@ -1,8 +1,5 @@
 Harish Surya
 Gobi Benny
-Ananda Somma
-Harish Gobi
-Surya Somma
 Surya Benny
 Somma Gobi
 Charu Swathi
@@ -13,6 +10,9 @@ Bhavya Malliga
 Malliga Sandhya
 Malliga Rachael
 Aradhana Malliga
+Ananda Somma
+Harish Gobi
+Surya Somma
 Surya Ananda
 Harish Benny
 Aradhana Sandhya
