@@ -107,15 +107,15 @@ class Graph {
 	  // Add edges
 };
 
-// // get sockaddr, IPv4 or IPv6:
-// void *get_in_addr(struct sockaddr *sa)
-// {
-// 	if (sa->sa_family == AF_INET) {
-// 		return &(((struct sockaddr_in*)sa)->sin_addr);
-// 	}
+// get sockaddr, IPv4 or IPv6:
+void *get_in_addr(struct sockaddr *sa)
+{
+	if (sa->sa_family == AF_INET) {
+		return &(((struct sockaddr_in*)sa)->sin_addr);
+	}
 
-// 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-// }
+	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
 
 //function that connects to the central to send the graph
 //snippets from Beej's guide are used for connecting and sendto central

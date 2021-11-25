@@ -309,7 +309,7 @@ int Min_Distance(float dist[], bool SP_tree[], int numV){
 	float min = INT_MAX, min_index;
 
 	for (int y = 0; y < numV; y++)
-		if (SP_tree[y] == false &&	dist[y] <= min){
+		if (SP_tree[y] == false && dist[y] <= min){
 			min = dist[y]; min_index = y;
 			// cout<<y<<'\t'<<min<<'\t'<<min_index<<endl;
 		}
