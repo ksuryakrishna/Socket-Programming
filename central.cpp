@@ -704,7 +704,7 @@ void Receive_graph_from_ServerT(){
 	//if any name is not found on the graph, then display invalid name
 	if(index_m.indexA == -2 || index_m.indexB == -2 || index_m.indexC == -2){
 
-		perror("ENTERED INVALID NAME...EXITING PROGRAM");
+		perror("ENTERED INVALID NAME...EXITING PROGRAM, PLEASE RESTART the PROGRAM");
 			Send_Results_to_ClientA();
 			Send_Results_to_ClientB();
 			close(sockUDP_binded);

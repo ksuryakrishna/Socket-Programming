@@ -107,15 +107,15 @@ class Graph {
 	  // Add edges
 };
 
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
+// // get sockaddr, IPv4 or IPv6:
+// void *get_in_addr(struct sockaddr *sa)
+// {
+// 	if (sa->sa_family == AF_INET) {
+// 		return &(((struct sockaddr_in*)sa)->sin_addr);
+// 	}
 
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
+// 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+// }
 
 //function that connects to the central to send the graph
 //snippets from Beej's guide are used for connecting and sendto central
@@ -244,23 +244,26 @@ void generate_map(){
 	numobj.numstruct = cnt;
 		// cout << "numobj.numstruct (cnt) = "<<numobj.numstruct<<endl;
 	//sample display
-	for(Vertno = 0; Vertno < cnt; Vertno++){
-		cout<<obj[Vertno].indexvalue<<"\t";
-		printf("%s\n",obj[Vertno].names);
-	}
+		// for(Vertno = 0; Vertno < cnt; Vertno++){
+		// 	cout<<obj[Vertno].indexvalue<<"\t";
+		// 	printf("%s\n",obj[Vertno].names);
+		// }
 	int index = 0;
+	//loop to serialize the matrix into 1D array later used when sending to central
 	for(auto x = 0; x < cnt; x++){
 		for(auto y = 0; y < cnt; y++){
 			adj.adj_m[index] = g.adjMatrix[x][y];
 			index+=1;
 		}
 	}
-	//sample display
-	for(auto x = 0; x < index; x++){
-		cout<<adj.adj_m[x]<<" ";
-	}
-	cout<<endl;	
+		// //sample display
+		// for(auto x = 0; x < index; x++){
+		// 	cout<<adj.adj_m[x]<<" ";
+		// }
+		// cout<<endl;	
 }
+//the main function
+//snippets of Beej's guide is used for binding the UDP socket
 int main(void)
 {
 	generate_map();
@@ -303,8 +306,7 @@ int main(void)
 
 	while(1){
 
-		printf("listener: waiting to recvfrom...\n");
-
+		//wait for request from central server
 		addr_len = sizeof their_addr;
 		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
@@ -314,14 +316,15 @@ int main(void)
 
 		numUsernames[0] = buf[0];
 
-		printf("listener: got packet from %s\n",
-			inet_ntop(their_addr.ss_family,
-				get_in_addr((struct sockaddr *)&their_addr),
-				s, sizeof s));
-		printf("listener: packet is %d bytes long\n", numbytes);
+			// printf("listener: got packet from %s\n",
+			// 	inet_ntop(their_addr.ss_family,
+			// 		get_in_addr((struct sockaddr *)&their_addr),
+			// 		s, sizeof s));
+			// printf("listener: packet is %d bytes long\n", numbytes);
 		buf[numbytes] = '\0';
-		printf("numUsernames: \"%s\"\n", numUsernames);
+			// printf("numUsernames: \"%s\"\n", numUsernames);
 
+		//receive the first username
 		addr_len = sizeof their_addr;
 		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
@@ -329,13 +332,13 @@ int main(void)
 			exit(1);
 		}
 
-		printf("listener: got packet from %s\n",
-			inet_ntop(their_addr.ss_family,
-				get_in_addr((struct sockaddr *)&their_addr),
-				s, sizeof s));
-		printf("listener: packet is %d bytes long\n", numbytes);
+			// printf("listener: got packet from %s\n",
+			// 	inet_ntop(their_addr.ss_family,
+			// 		get_in_addr((struct sockaddr *)&their_addr),
+			// 		s, sizeof s));
+			// printf("listener: packet is %d bytes long\n", numbytes);
 		buf[numbytes] = '\0';
-		printf("listener: packet contains clientA_Name: \"%s\"\n", buf);
+			// printf("listener: packet contains clientA_Name: \"%s\"\n", buf);
 		
 		strcpy(clientA_Name, buf);
 
@@ -344,81 +347,82 @@ int main(void)
 		string temp;
 		ss1 << clientA_Name;
 	    ss1 >> temp; 
-		// cout << "temp: "<<temp<<endl;
+
+	    //find the index of the name in the map
 		auto it = m.find(temp);
 		if(m.count(temp)){
 		    it = m.find(temp);
 		    index_m.indexA = it->second;
 		}
 		else
-			index_m.indexA = -2;
+			index_m.indexA = -2;  //if name not present report it as error
 
+		//get the first username given by clientB to central
 		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 			perror("recvfrom");
 			exit(1);
 		}
-		
-		printf("listener: got packet from %s\n",
-			inet_ntop(their_addr.ss_family,
-				get_in_addr((struct sockaddr *)&their_addr),
-				s, sizeof s));
-		printf("listener: packet is %d bytes long\n", numbytes);
+			
+			// printf("listener: got packet from %s\n",
+			// 	inet_ntop(their_addr.ss_family,
+			// 		get_in_addr((struct sockaddr *)&their_addr),
+			// 		s, sizeof s));
+			// printf("listener: packet is %d bytes long\n", numbytes);
 		buf[numbytes] = '\0';
-		printf("listener: packet contains clientB_Name1: \"%s\"\n", buf);	
+			// printf("listener: packet contains clientB_Name1: \"%s\"\n", buf);	
 
 		strcpy(clientB_Name1, buf);
 
 		ss2 << clientB_Name1;
 	    ss2 >> temp; 
-		// cout << "temp: "<<temp<<endl;
+		
+		//find the index of the name in the map
 		if(m.count(temp)){
 			it = m.find(temp);
 	    	index_m.indexB = it->second;   //send these to central	
 		}
 		else
-			index_m.indexB = -2;
+			index_m.indexB = -2;  //if name is invalid
 
 
-		index_m.indexC = -1;
+		index_m.indexC = -1;	//default value -1 assumes there is no 2nd name from B
 		
-		if(numUsernames[0] == '2'){
-
+		if(numUsernames[0] == '2'){ //if second name present
+			//get the second name of B
 			if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
 				(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 				perror("recvfrom");
 				exit(1);
 			}
 			
-			printf("listener: got packet from %s\n",
-				inet_ntop(their_addr.ss_family,
-					get_in_addr((struct sockaddr *)&their_addr),
-					s, sizeof s));
-			printf("listener: packet is %d bytes long\n", numbytes);
+				// printf("listener: got packet from %s\n",
+				// 	inet_ntop(their_addr.ss_family,
+				// 		get_in_addr((struct sockaddr *)&their_addr),
+				// 		s, sizeof s));
+				// printf("listener: packet is %d bytes long\n", numbytes);
 			buf[numbytes] = '\0';
-			printf("listener: packet contains clientB_Name2 \"%s\"\n", buf);	
+				// printf("listener: packet contains clientB_Name2 \"%s\"\n", buf);	
 
 			strcpy(clientB_Name2, buf);	
 			// printf("test of clientB_Name2: %s\n", clientB_Name2);
 			ss3 << clientB_Name2;
 		    ss3 >> temp; 
-		    // cout << "temp2: "<< temp <<endl;
+		    //find the index of this name
 		    if(m.count(temp)){
 			    it = m.find(temp);
-			    // cout<<"it->second:"<<it->second;
 			    index_m.indexC = it->second;
 			}
 			else
-				index_m.indexC = -2;
+				index_m.indexC = -2;  //if name is invalid
 
 		}
 
 		printf("The ServerT received a request from Central to get the topology.\n");
  
 		//sample display
-	    cout << "indexA: " << index_m.indexA << endl << "indexB: " << index_m.indexB <<endl<< "indexC: " 
-	    			<< index_m.indexC << endl;
-	// received the two usernames up until this point
+		    // cout << "indexA: " << index_m.indexA << endl << "indexB: " << index_m.indexB <<endl<< "indexC: " 
+		    // 			<< index_m.indexC << endl;
 
 
 		Connect_to_Central_to_send_graph();
