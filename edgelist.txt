@@ -1,13 +1,4 @@
 Harish Surya
-Gobi Benny
-Surya Benny
-Somma Gobi
-Charu Swathi
-Swathi Bhavya
-Swathi Pavithra
-Swathi Aradhana
-Bhavya Malliga
-Malliga Sandhya
 Malliga Rachael
 Aradhana Malliga
 Ananda Somma
@@ -17,4 +8,13 @@ Surya Ananda
 Harish Benny
 Aradhana Sandhya
 Swathi Sandhya
+Gobi Benny
+Surya Benny
+Somma Gobi
+Charu Swathi
+Swathi Bhavya
+Swathi Pavithra
+Swathi Aradhana
+Bhavya Malliga
+Malliga Sandhya
 Charu Rachael

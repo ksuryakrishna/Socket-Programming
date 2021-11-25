@@ -35,20 +35,20 @@ using namespace std;
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
 
-    struct numV {	
+    struct numV {		//struct that stores the number of vertices in the graph sent
     	int numstruct;
     }numobj;
 
-	struct convert_map_to_struct{
+	struct convert_map_to_struct{	//struct to store the map generated
 		int indexvalue;
 		char names[512];
 	}obj[400];   
 
 	struct adj_matrix{
-		uint8_t adj_m[160000];
+		uint8_t adj_m[160000];			//struct to store the adjacency matrix as 1D array
 	}adj;
 
-	struct index_matrix{
+	struct index_matrix{		//struct to store the indices of the given usernames
 		int indexA;
 		int indexB;
 		int indexC;
@@ -64,52 +64,61 @@ using namespace std;
 
     char clientA_Name[512], clientB_Name1[512], clientB_Name2[512];
 
-    char numUsernames[] = "1"; 
+    char numUsernames[] = "1";  //default usernames count from B is 1
 
+//Graph class snippet from geekforgeeks.org referred and modified
+//Used for Matrix representation of a graph
 class Graph {
-   private:
-  // int** adjMatrix;
-  int numVertices;
-
-   public:
-  int** adjMatrix;
-  // Initialize the matrix to zero
-  Graph(int numVertices) {
-    this->numVertices = numVertices;
-    adjMatrix = new int*[numVertices];
-    for (int i = 0; i < numVertices; i++) {
-      adjMatrix[i] = new int[numVertices];
-      for (int j = 0; j < numVertices; j++)
-        adjMatrix[i][j] = 0;
-    }
-  }
-
-  void toString() {
-    for (int i = 0; i < numVertices; i++) {
-      cout << i << " : ";
-      for (int j = 0; j < numVertices; j++)
-        cout << adjMatrix[i][j] << " ";
-      cout << "\n";
-    }
-  }
   
-  // Add edges
-  void addEdge(int i, int j) {
-    adjMatrix[i][j] = 1;
-    adjMatrix[j][i] = 1;
-  }
+  private:
+  
+  	int numVertices;
+
+  public:
+
+	  int** adjMatrix;
+
+	  // Initialize the matrix to zero
+	  Graph(int numVertices) {
+	    this->numVertices = numVertices;
+	    adjMatrix = new int*[numVertices];
+	    for (int i = 0; i < numVertices; i++) {
+	      adjMatrix[i] = new int[numVertices];
+	      for (int j = 0; j < numVertices; j++)
+	        adjMatrix[i][j] = 0;
+	    }
+	  }
+
+	  void addEdge(int i, int j) {
+	    adjMatrix[i][j] = 1;
+	    adjMatrix[j][i] = 1;
+	  }
+
+	//function used for display	  
+	  // void toString() {
+	  //   for (int i = 0; i < numVertices; i++) {
+	  //     cout << i << " : ";
+	  //     for (int j = 0; j < numVertices; j++)
+	  //       cout << adjMatrix[i][j] << " ";
+	  //     cout << "\n";
+	  //   }
+	  // }
+	  
+	  // Add edges
 };
 
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
+// // get sockaddr, IPv4 or IPv6:
+// void *get_in_addr(struct sockaddr *sa)
+// {
+// 	if (sa->sa_family == AF_INET) {
+// 		return &(((struct sockaddr_in*)sa)->sin_addr);
+// 	}
 
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
+// 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+// }
 
+//function that connects to the central to send the graph
+//snippets from Beej's guide are used for connecting and sendto central
 void Connect_to_Central_to_send_graph(){
 	//add content of talker here
 		memset(&hints, 0, sizeof hints);
@@ -143,7 +152,7 @@ void Connect_to_Central_to_send_graph(){
 			perror("talker: sendto");
 			exit(1);
 		}
-		printf("talker: sent %d bytes to central\n", numbytes);
+			// printf("talker: sent %d bytes to central\n", numbytes);
 		
 	//send map as struct objs
 		for (auto x = 0; x < cnt; x++){
@@ -153,34 +162,36 @@ void Connect_to_Central_to_send_graph(){
 				exit(1);
 			}
 		}
-		printf("talker: sent %d bytes to central\n", numbytes);
+			// printf("talker: sent %d bytes to central\n", numbytes);
 			
 	//send adjacency matrix
-		cout<<"Going to send matrix\n";
+			// cout<<"Going to send matrix\n";
 		if ((numbytes = sendto(sockfd, (char*) &adj, 65000, 0,
 				 p->ai_addr, p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
+
 	//send index of the given clients
-		cout<<"going to send index_M\n";
+			// cout<<"going to send index_M\n";
 		if ((numbytes = sendto(sockfd, (char*) &index_m, sizeof(index_matrix), 0,
 				 p->ai_addr, p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
-		printf("talker: sent %d bytes to central\n", numbytes);
+
 		freeaddrinfo(servinfo);
 
-		printf("talker: sent %d bytes to central\n", numbytes);
-		close(sockfd);
+		close(sockfd);  //close the socket after sending to central
 
 }
 
+//function to generate map by reading the edgelist
 void generate_map(){
 
+//read one string at a time from the edgelist
     while(fs>>S){
-	    	//cout<<s<<endl;
+	    	
 	    if(!m.count(S)){
 	    	m.insert(make_pair(S,cnt));
 	    	cnt++;
@@ -188,10 +199,10 @@ void generate_map(){
     }
     //sample output
     map<string,int>::iterator i;
-    for(i=m.begin();i!=m.end();i++) {
-    	cout<<i->first<<"\t"<<i->second<<endl;
-    }
-
+	    // for(i=m.begin();i!=m.end();i++) {
+	    // 	cout<<i->first<<"\t"<<i->second<<endl;
+	    // }
+//create graph
     Graph g(cnt);
    // g.toString();
     fs.close();
@@ -199,29 +210,30 @@ void generate_map(){
     //reopen the file again to read the names again to add edges in the graph
 	ifstream ifs(file_name); 
 	int c = 0;
-	// char[] temp_name_read = "";
 	
 	string f;
 	int a = 0, b = 0;  //a=first index, b= second index
+
+
 	while(ifs>>S){
 		c++;
-		if(c==1){
+		if(c==1){ //first name in the new line of edgelist
 			f = S;
 		}
-		if(c==2){
-			//edge exists between r and s
+		if(c==2){ //edge found 
+			//edge exists between f and S
 			//So call add edge here
 			auto it = m.find(f);
 			a = it->second;
 			it = m.find(S);
 			b = it->second;
-			 //cout<<a<<" "<<b<<endl;
+			 
 			g.addEdge(a,b);
 			c = 0;
 		}
 	}
 	ifs.close();
-	g.toString();
+	// g.toString();
 
 	//add the map values on to a struct obj - total numVertices
 	for(i=m.begin(); i!=m.end(), Vertno < cnt; Vertno++, i++){
@@ -230,7 +242,7 @@ void generate_map(){
 	}
 	//insert numVertices(cnt) into numstruct
 	numobj.numstruct = cnt;
-	cout << "numobj.numstruct (cnt) = "<<numobj.numstruct<<endl;
+		// cout << "numobj.numstruct (cnt) = "<<numobj.numstruct<<endl;
 	//sample display
 	for(Vertno = 0; Vertno < cnt; Vertno++){
 		cout<<obj[Vertno].indexvalue<<"\t";

@@ -501,7 +501,7 @@ int main(){
 				cout<<v[i][j]<<" ";
 			cout<<endl;
 		}
-
+		m.clear();
 		//create a map with index as the key1, name and score as value
 		generate_2d_map();
 
