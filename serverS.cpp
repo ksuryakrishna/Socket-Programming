@@ -1,3 +1,10 @@
+/*
+** serverS.cpp:
+		- Creates a map of scores and names
+		- Receives requests from the central and sends the scores to the central
+		- Closes the socket
+	- by Surya Krishna Kasiviswanathan, USC ID: 9083261716
+*/
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,7 +42,7 @@ using namespace std;
 	string file_name = "scores.txt";
     map<string,int> m; 		//map created based on string as key and score as value
     
-    int numVertices = 0;	//total no.of vertices
+    int numVertices = 0, numVfromC = 0;	//total no.of vertices
 	int Vertno = 0;
 
     fstream fs(file_name);
@@ -44,6 +51,15 @@ using namespace std;
 		int score_value;
 		char names[512];
 	}obj_score[400];
+
+    struct numV{	//struct that stores the number of vertices in the graph sent
+    	int numstruct;
+    }numobj;
+
+	struct convert_map_to_struct{	//struct to store the map received
+		int indexvalue;
+		char names[512];
+	}obj[400];
 
 // // get sockaddr, IPv4 or IPv6:
 // void *get_in_addr(struct sockaddr *sa)
@@ -96,6 +112,43 @@ void Connect_to_Central_to_send_score(){
 
 		freeaddrinfo(servinfo);
 		close(sockfd_to_central);
+}
+
+//function that receives the required from central
+//snippets from Beej's guide is used to recvfrom the central
+void Recv_from_central(){
+
+	addr_len = sizeof their_addr;
+	if ((numbytes = recvfrom(sockfd_binded, (char*) &numobj, sizeof(numobj), 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	numVfromC = numobj.numstruct;
+		// cout << "numobj.numstruct (numVertices) = "<<numVertices<<endl;
+
+		// printf("listener: got packet from %s\n",
+		// 	inet_ntop(their_addr.ss_family,
+		// 		get_in_addr((struct sockaddr *)&their_addr),
+		// 		s, sizeof s));
+		// printf("listener: packet is %d bytes long\n", numbytes);
+
+	//get ready to receive the adjacency matrix and the map in the form of struct objects
+	//get the map of nodes
+	for(auto x = 0; x < numVfromC; x++){
+		addr_len = sizeof their_addr;
+		if ((numbytes = recvfrom(sockfd_binded, (char*) &obj[x], sizeof(convert_map_to_struct), 0,
+			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+		}
+	}
+		// cout<<"going to display received map \n";
+		// //sample display 
+		// for(auto x = 0; x<numVertices;x++){
+		// 	cout<<x<<": \t" <<obj[x].indexvalue<<"  "<<obj[x].names<<endl;
+		// }
+
 }
 
 //function that reads the contents of score.txt and forms a map based on the names and score
@@ -175,13 +228,8 @@ int main(){
 
 	while(1){
 
-		addr_len = sizeof their_addr;
-		if ((numbytes = recvfrom(sockfd_binded, buf, MAXBUFLEN-1 , 0,
-			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-			perror("recvfrom");
-			exit(1);
-		}
-		buf[numbytes] = '\0';
+		Recv_from_central();
+
 
 	// received the two usernames up until this point
 		printf("The ServerS received a request from Central to get the scores.\n");

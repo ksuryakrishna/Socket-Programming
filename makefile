@@ -1,6 +1,6 @@
-#this is a simple makefile might not be efficient but works well for this small project
+#this is a simple makefil, might not be efficient but works well for this small project
 
-all:
+all:   #to compile all the files together
 	g++ --std=c++11 clientA.cpp -o clientA
 	g++ --std=c++11 clientB.cpp -o clientB
 	g++ --std=c++11 central.cpp -o central
@@ -26,6 +26,6 @@ serverS:
 serverP:
 	g++ --std=c++11 serverP.cpp -o serverP
 
-clean:
+clean:	#to clear all object files
 	rm -f clientA clientB central serverT serverS serverP
 

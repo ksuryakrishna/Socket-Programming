@@ -1,5 +1,9 @@
 /*
-** serverT.cpp
+** serverT.cpp:
+		- Creates a map of indices and names after reading the edgelist
+		- Receives the usernames from the central and returns a graph to be sent to server P
+		- Closes the socket
+	- by Surya Krishna Kasiviswanathan, USC ID: 9083261716
 */
 #include <iostream>
 #include <stdio.h>
@@ -166,7 +170,7 @@ void Connect_to_Central_to_send_graph(){
 			
 	//send adjacency matrix
 			// cout<<"Going to send matrix\n";
-		if ((numbytes = sendto(sockfd, (char*) &adj, 65000, 0,
+		if ((numbytes = sendto(sockfd, (char*) &adj, 65500, 0,
 				 p->ai_addr, p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);

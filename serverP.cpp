@@ -1,5 +1,16 @@
 /*
-** serverP.cpp
+** serverP.cpp:
+		- Receives the graph and scores from central
+		- Based on the data received, creates a map based on index as key and the names and scores as values
+		- Creates weighted graph based on the matching gap between each node using the formula
+			Matching Gap between (S1, S2) = |S1-S2| / (S1 + S2)
+		- Uses Dijkstra's algorithm to find the minimum spanning tree (MPT) for a given source node
+		- finds the shortest path from the source node to the 1/2 given destination nodes
+		- identifies the path by storing the parent node information of each node
+		- recursively traverses the parent node to get the path
+		- sends the results to central
+		- Closes the socket
+	- by Surya Krishna Kasiviswanathan, USC ID: 9083261716
 */
 #include <iostream>
 #include <stdio.h>
@@ -178,12 +189,12 @@ void Connect_to_Central_to_send_results(){
 
 }
 
-//function that receives the required from central
+//function that receives the required details from central
 //snippets from Beej's guide is used to recvfrom the central
 void Recv_from_central(){
 
 	addr_len = sizeof their_addr;
-	if ((numbytes = recvfrom(sockfd_binded, (char*) &numobj, sizeof(numobj)/*MAXBUFLEN-1*/, 0,
+	if ((numbytes = recvfrom(sockfd_binded, (char*) &numobj, sizeof(numobj), 0,
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 		perror("recvfrom");
 		exit(1);
@@ -201,7 +212,7 @@ void Recv_from_central(){
 	//get the map of nodes
 	for(auto x = 0; x < numVertices; x++){
 		addr_len = sizeof their_addr;
-		if ((numbytes = recvfrom(sockfd_binded, (char*) &obj[x], sizeof(convert_map_to_struct)/*MAXBUFLEN-1*/, 0,
+		if ((numbytes = recvfrom(sockfd_binded, (char*) &obj[x], sizeof(convert_map_to_struct), 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 			perror("recvfrom");
 			exit(1);
@@ -215,7 +226,7 @@ void Recv_from_central(){
 	//now get the matrix
 		// printf("listener: waiting to recv adjacency matrix...\n");
 	//ge the adj matrix
-	if ((numbytes = recvfrom(sockfd_binded, (char*) &adj, 65000/*MAXBUFLEN-1*/, 0,
+	if ((numbytes = recvfrom(sockfd_binded, (char*) &adj, 65500, 0,
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 		perror("recvfrom");
 		exit(1);
@@ -231,7 +242,7 @@ void Recv_from_central(){
 	//receive score map from Central
 	for(auto x = 0; x < numVertices; x++){
 		addr_len = sizeof their_addr;
-		if ((numbytes = recvfrom(sockfd_binded, (char*) &obj_score[x], sizeof(score_map)/*MAXBUFLEN-1*/, 0,
+		if ((numbytes = recvfrom(sockfd_binded, (char*) &obj_score[x], sizeof(score_map), 0,
 			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 			perror("recvfrom");
 			exit(1);
@@ -262,6 +273,8 @@ void Recv_from_central(){
 		// cout<<"indexA: "<<index_m.indexA<<"\t indexB: "<<index_m.indexB<<"\t indexC: "<<index_m.indexC<<endl;
 
 }
+
+//the 4 functions below are referred from geeksforgeeks.org and modified according to the requirement of this project
 
 //function that recursively finds out the path from dest to the source
 //by traversing through the parent_node array

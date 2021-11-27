@@ -1,5 +1,9 @@
 /*
-** clientB.cpp
+** clientB.cpp:
+		- Sends 1/2 username(s) to the central and waits for the results
+		- Prints the path(s) and matching gap(if available), else says not compatabile
+		- closes the TCP socket after receving the results
+	- by Surya Krishna Kasiviswanathan, USC ID: 9083261716
 */
 #include <iostream>
 #include <stdio.h>

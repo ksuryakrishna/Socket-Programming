@@ -1,5 +1,10 @@
 /*
-** central.cpp
+** central.cpp:
+		- Receives the input from both clients
+		- Sends it to backend servers, gets the results and sends it back to the clients (to A in correct order and to B in reverse order)
+		- this server always keeps 2 TCP parent sockets live to listen to incoming requests from the clients, but closes the child sockets after sending out the results
+		- keeps 1 UDP socket binded and open for any server to send its results and closes the UDP sockets that it uses to send to the servers
+	- by Surya Krishna Kasiviswanathan, USC ID: 9083261716
 */
 #include <iostream>
 #include <stdio.h>
@@ -428,7 +433,7 @@ void Receive_score_from_ServerS(){
 void Connect_to_ServerS(){
 
 	sockfdS = 0; //used for UDP connection between central and S
-	char score_req[] = "RFS"; //request for score
+	// char score_req[] = "RFS"; //request for score
 
 		// cout << "Entered connect to serverS\n";
 
@@ -457,11 +462,28 @@ void Connect_to_ServerS(){
 		return;
 	}
 
-	if ((nbytes = sendto(sockfdS, score_req, strlen(score_req), 0,
-			 p->ai_addr, p->ai_addrlen)) == -1){
-		perror("talker: sendto");
-		exit(1);
-	}
+	// if ((nbytes = sendto(sockfdS, score_req, strlen(score_req), 0,
+	// 		 p->ai_addr, p->ai_addrlen)) == -1){
+	// 	perror("talker: sendto");
+	// 	exit(1);
+	// }
+
+			if ((nbytes = sendto(sockfdS, (char*) &numobj, sizeof(numobj), 0,
+					 p->ai_addr, p->ai_addrlen)) == -1) {
+				perror("talker: sendto");
+				exit(1);
+			}
+				// printf("talker: sent %d bytes to P\n", nbytes);
+			
+		//send map as struct objs
+			// cout<<"Going to send index map";
+			for (auto x = 0; x < numVertices; x++){
+				if ((nbytes = sendto(sockfdS, (char*) &obj[x], sizeof(convert_map_to_struct), 0,
+					 p->ai_addr, p->ai_addrlen)) == -1) {
+					perror("talker: sendto");
+					exit(1);
+				}
+			}	
 		//printf("talker: sent %d bytes to server T\n", nbytes);
 
 	printf("The Central server sent a request to Backend-Server S.\n");
