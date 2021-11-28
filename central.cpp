@@ -877,9 +877,9 @@ int main(void)
 				//data received from client
 				//store value in buf as clientA;
 				strcpy(clientA_Name, buf);
-				printf("%s\n",clientA_Name);
+				// printf("%s\n",clientA_Name);
 
-				printf("The Central server received input=%s from the client using TCP over port %s.\n", clientA_Name, PORT1);
+				printf("The Central server received input = %s from the client using TCP over port %s.\n", clientA_Name, PORT1);
 
 				clientA_rec = 1;
 
@@ -940,7 +940,7 @@ int main(void)
 						strcpy(clientB_Name1, Bnamesobj1.name);
 						printf("%s\n",clientB_Name1);
 
-						printf("The Central server received input=%s from the client using TCP over	port %s. \n", clientB_Name1, PORT2);
+						printf("The Central server received input = %s from the client using TCP over port %s. \n", clientB_Name1, PORT2);
 
 						clientB_rec = 1;
 

@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 				    exit(1);
 				}
 			}
-			printf("Found compatibility for %s and %s\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
+			printf("Found compatibility for %s and %s:\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
 			//print the path
 			int k = 0;
 			for(k = 0; k < NVP1.numVinP - 1; k++){
@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
 				    exit(1);
 				}
 			}
-			printf("Found compatibility for %s and %s\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
+			printf("Found compatibility for %s and %s:\n", VIP1[0].names, VIP1[NVP1.numVinP - 1].names);
 			//print path
 			int k = 0;
 			for(k = 0; k < NVP1.numVinP - 1; k++){
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
 				    exit(1);
 				}
 			}
-			printf("Found compatibility for %s and %s\n", VIP2[0].names, VIP2[NVP2.numVinP - 1].names);
+			printf("Found compatibility for %s and %s:\n", VIP2[0].names, VIP2[NVP2.numVinP - 1].names);
 			//print path
 			int k = 0;
 			for(k = 0; k < NVP2.numVinP - 1; k++){

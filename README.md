@@ -10,7 +10,7 @@ c. BONUS OPTIONAL PART IS COMPLETED
 	
 	STEPS TO RUN THE PROJECT:
 	 - Add the 'edgelist.txt' and 'scores.txt' in the same location as the source code .cpp files
-	 - Open a terminal and run 'make all' to generate the object files
+	 - Open a terminal and run 'make all' to generate the object/executable files
 	 - Open 6 terminals in total and run each program in the following order: (eg: For servers run './serverT', For clients run './clientA <input>')
 	 	1. central
 	 	2. serverT
