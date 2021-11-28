@@ -12,12 +12,12 @@ c. BONUS OPTIONAL PART IS COMPLETED
 	 - Add the 'edgelist.txt' and 'scores.txt' in the same location as the source code .cpp files
 	 - Open a terminal and run 'make all' to generate the object/executable files
 	 - Open 6 terminals in total and run each program in the following order: (eg: For servers run './serverT', For clients run './clientA <input>')
-	 	1. central
+	 	1. serverC
 	 	2. serverT
 	 	3. serverS
 	 	4. serverP
-	 	5. clientA/clientB
-	 	6. clientB/clientA
+	 	5. clientA or clientB (Any order)
+	 	6. clientB or clientA (Any order)
 	 - Any client can send the request first, no particular order. Only requirement is all the servers need to be running before the clients start to run.
 
 d. Code files in this project:
@@ -48,6 +48,7 @@ d. Code files in this project:
 	6. serverP.cpp
 		- Receives the graph and scores from central
 		- Based on the data received, creates a map based on index as key and the names and scores as values
+			- to look it up while sending the results to central as path names
 		- Creates weighted graph based on the matching gap between each node using the formula
 			Matching Gap between (S1, S2) = |S1-S2| / (S1 + S2)
 		- Uses Dijkstra's algorithm to find the minimum spanning tree (MPT) for a given source node
@@ -58,8 +59,6 @@ d. Code files in this project:
 		- Closes the socket
 	7. makefile
 		- make all: compiles all the source cpp codes and creates object files
-		- make <filename>: compiles a particular source cpp code
-			eg: "make central" compiles the source code of the central server
 		- make clean: deletes all the object files previously created
 
 e. Format of messages:
@@ -100,7 +99,7 @@ g. Idiosyncrasy (Maximum Limit):
 h. References:
 
 	- Some snippets were referred from 'Beej's guide for Socket Programming' and modified to establish the TCP and UDP socket communication between the clients and the servers in this project. 
-	- Also, I referred https://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-greedy-algo-7/?ref=lbp for finding the minimum spanning tree for a given source node. The following 4 functions in serverP.cpp are modifications from the one from geeksforgeeks: dijkstra(), check_parent_n_gap(), getpath(), Min_Distance(). 
+	- Also, I referred https://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-greedy-algo-7/?ref=lbp for finding the minimum spanning tree for a given source node. The following 4 functions in serverP.cpp are modifications from the one from 'geeksforgeeks': dijkstra(), check_parent_n_gap(), getpath(), Min_Distance(). 
 
 
 
