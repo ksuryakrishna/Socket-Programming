@@ -5,14 +5,14 @@ a. Surya Krishna Kasiviswanathan
 b. STUDENT ID: 9083261716
 
 	 ASSUMPTIONS:
-	  - Every name present in the scores.txt file is present atleast once in the edgelist.txt. Otherwise the project fails.
+	  - Every name present in the scores.txt file is present atleast once in the edgelist.txt.
 	  - Servers are run before the clients
 	  - When an invalid input is given by any of the clients, an error message is thrown by both the clients and the central server. The programs get terminated.
 
 	 TESTING DONE:
 	  - The project theoritically supports upto 255 unique usernames and 400 edges.
-	  - However the maximum that was actually tested was 120 usernames and 130 edges and the project works. It is expected to work for higher numbers too.
-	  - While running the project in the VM with long edgelist.txt and scores.txt I realized that due to the slowness of the VM, some of the UDP packets were not received on time. So I have added sufficient delay for the servers to receives packets to reach comfortably. So please wait atleast 10 seconds for the output to be visible on the client terminals.
+	  - However the maximum that was actually tested was 120 usernames and 130 edges, and was found to work. It is expected to work for higher numbers too.
+	  - While running the project in the VM with long edgelist.txt and scores.txt I realized that due to the slowness of the VM, some of the UDP packets were not received on time because the receiver was slow in completing memory store operations. So I have added sufficient delay for the servers to receive packets comfortably. So please wait atleast 5 seconds for the output to be visible on the client terminals.
 
 	  STEPS TO RUN THE PROJECT:
 	 - Add the 'edgelist.txt' and 'scores.txt' in the same location as the source code .cpp files
@@ -25,7 +25,7 @@ b. STUDENT ID: 9083261716
 	 	5. clientA & clientB (Any order)
 
 	 - Any client can send the request first, no particular order. Only requirement is all the servers need to be running before the clients start to run.
-	 - Please wait for 5 to 10 seconds for the output to be visible on the client terminals 
+	 - Please wait for atleast 5 seconds for the output to be visible on the client terminals. 
 
 c. BONUS OPTIONAL PART IS COMPLETED
 
@@ -37,20 +37,20 @@ d. Code files in this project:
 
 	1. clientA.cpp
 		- Sends 1 username to the central and waits for the results
-		- Prints the path and matching gap(if available), else says not compatabile
-		- closes the TCP socket after receving the results
+		- Prints the path and matching gap(if available), else says not compatible
+		- Closes the TCP socket after receving the results
 	2. clientB.cpp
 		- Sends 1/2 username(s) to the central and waits for the results
-		- Prints the path(s) and matching gap(if available), else says not compatabile
-		- closes the TCP socket after receving the results
+		- Prints the path(s) and matching gap(if available), else says not compatible
+		- Closes the TCP socket after receving the results
 	3. central.cpp
 		- Receives the input from both clients
 		- Sends it to backend servers, gets the results and sends it back to the clients (to A in correct order and to B in reverse order)
-		- this server always keeps 2 TCP parent sockets live to listen to incoming requests from the clients, but closes the child sockets after sending out the results
-		- keeps 1 UDP socket binded and open for any server to send its results and closes the UDP sockets that it uses to send to the servers
+		- This server always keeps 2 TCP parent sockets live to listen to incoming requests from the clients, but closes the child sockets after sending out the results
+		- Keeps 1 UDP socket binded and open for any server to send its results and closes the UDP sockets that it uses to send to the servers
 	4. serverT.cpp
 		- Creates a map of indices and names after reading the edgelist
-		- Receives the usernames from the central and returns a graph to be sent to server P
+		- Receives the usernames from the central and returns graphs to be sent to server P
 		- Closes the socket
 	5. serverS.cpp
 		- Creates a map of scores and names
@@ -61,12 +61,12 @@ d. Code files in this project:
 		- Based on the data received, creates a map based on index as key and the names and scores as values
 			- to look it up while sending the results to central as path names
 		- Creates weighted graph based on the matching gap between each node using the formula
-			Matching Gap between (S1, S2) = |S1-S2| / (S1 + S2)
+			Matching Gap between (S1, S2) = |S1 - S2| / (S1 + S2)
 		- Uses Dijkstra's algorithm to find the minimum spanning tree (MPT) for a given source node
-		- finds the shortest path from the source node to the 1/2 given destination nodes
-		- identifies the path by storing the parent node information of each node
-		- recursively traverses the parent node to get the path
-		- sends the results to central
+		- Finds the shortest path from the source node to the 1/2 given destination nodes
+		- Identifies the path by storing the parent node information of each node
+		- Recursively traverses the parent node to get the path
+		- Sends the results to central
 		- Closes the socket
 	7. makefile
 		- make all: compiles all the source cpp codes and creates object files
@@ -106,7 +106,7 @@ e. Format of messages:
 g. Idiosyncrasy (Maximum Limit):
 
 	- The project supports upto 400 edges and 255 unique usernames in the edgelist/scorelist.
-	- Every name present in the scores.txt file should be present atleast once in the edgelist.txt. Otherwise the project fails.
+	- Every name present in the scores.txt file should be present atleast once in the edgelist.txt. Otherwise the project might fail for few inputs.
 
 h. References:
 
