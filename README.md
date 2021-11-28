@@ -12,7 +12,7 @@ b. STUDENT ID: 9083261716
 	 TESTING DONE:
 	  - The project theoritically supports upto 255 unique usernames and 400 edges.
 	  - However the maximum that was actually tested was 120 usernames and 130 edges and the project works. It is expected to work for higher numbers too.
-	  - While running the project in the VM with long edgelist.txt and scores.txt I realized that due to the slowness of the VM, some of the UDP packets were not received on time. So I have added sufficient delay for the servers to receives packets to reach comfortably. So please wait atleast 5 to 10 seconds for the output to be visible on the client terminals.
+	  - While running the project in the VM with long edgelist.txt and scores.txt I realized that due to the slowness of the VM, some of the UDP packets were not received on time. So I have added sufficient delay for the servers to receives packets to reach comfortably. So please wait atleast 10 seconds for the output to be visible on the client terminals.
 
 	  STEPS TO RUN THE PROJECT:
 	 - Add the 'edgelist.txt' and 'scores.txt' in the same location as the source code .cpp files
@@ -104,8 +104,10 @@ e. Format of messages:
 		 		- to client B in reverse order
 
 g. Idiosyncrasy (Maximum Limit):
+
 	- The project supports upto 400 edges and 255 unique usernames in the edgelist/scorelist.
-	- Every name present in the scores.txt file is present atleast once in the edgelist.txt. Otherwise the project fails.
+	- Every name present in the scores.txt file should be present atleast once in the edgelist.txt. Otherwise the project fails.
+
 h. References:
 
 	- Some snippets were referred from 'Beej's guide for Socket Programming' and modified to establish the TCP and UDP socket communication between the clients and the servers in this project. 

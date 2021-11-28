@@ -146,7 +146,7 @@ void Connect_to_Central_to_send_results(){
 			exit(1);
 		}
 		// printf("talker: sent %d bytes to central\n", numbytes);
-		
+		for (int w = 0; w < 1000; w++); //delay to wait for other side to process
 	//send vertices as structs
 		if(pathfound1 != -1){
 			for (auto x = 0; x < NVP1.numVinP; x++){
@@ -158,7 +158,7 @@ void Connect_to_Central_to_send_results(){
 				// printf("talker: sent %d bytes to central\n", numbytes);
 			}
 		}
-
+		for (int w = 0; w < 1000; w++); //delay to wait for other side to process
 		if(index_m.indexC != -1 && index_m.indexC != -2){ //if name valid and there are 2 usernames from B
 
 			//send numverticesin path
@@ -168,7 +168,7 @@ void Connect_to_Central_to_send_results(){
 					exit(1);
 				}
 				// printf("talker: sent %d bytes to central\n", numbytes);
-				
+				for (int w = 0; w < 1000; w++); //delay to wait for other side to process
 			//send vertices as structs
 				if(pathfound2 != -1){
 					for (auto x = 0; x < NVP2.numVinP; x++){
@@ -178,6 +178,7 @@ void Connect_to_Central_to_send_results(){
 							exit(1);
 						}
 						// printf("talker: sent %d bytes to central\n", numbytes);
+						for (int w = 0; w < 1000; w++); //delay to wait for other side to process
 					}
 				}			
 		}

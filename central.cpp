@@ -350,7 +350,7 @@ void Connect_to_ServerP(){
 				exit(1);
 			}
 				// printf("talker: sent %d bytes to P\n", nbytes);
-			
+			for (int w = 0; w < 1000; w++); //delay to wait for other side to process
 		//send map as struct objs
 			// cout<<"Going to send index map";
 			for (auto x = 0; x < numVertices; x++){
@@ -369,7 +369,7 @@ void Connect_to_ServerP(){
 				perror("talker: sendto");
 				exit(1);
 			}
-		for(int w = 0; w < INT_MAX/2; w++);
+		for(int w = 0; w < INT_MAX/4; w++); //delay to wait for other side to process
 		//send score map
 			// cout<<" Going to send score_map\n";
 		//send map as struct objs
@@ -381,7 +381,7 @@ void Connect_to_ServerP(){
 				}
 				// printf("talker: sent %d bytes to P\n", nbytes);
 			}
-		for(int w = 0; w < INT_MAX/2; w++);
+		for(int w = 0; w < INT_MAX/4; w++); //delay to wait for other side to process
 			// cout<<"going to send index list\n";
 
 			if ((nbytes = sendto(sockfdP, (char*) &index_m, sizeof(index_matrix), 0,
