@@ -21,6 +21,7 @@
 #include <fstream>
 #include <cstring>
 #include <sstream>
+#include <limits.h>
 
 using namespace std; 
 
@@ -176,6 +177,7 @@ void Connect_to_Central_to_send_graph(){
 			exit(1);
 		}
 
+		for(int w = 0; w < INT_MAX; w++);
 	//send index of the given clients
 			// cout<<"going to send index_M\n";
 		if ((numbytes = sendto(sockfd, (char*) &index_m, sizeof(index_matrix), 0,

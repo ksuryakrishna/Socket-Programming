@@ -4,11 +4,17 @@ a. Surya Krishna Kasiviswanathan
 
 b. STUDENT ID: 9083261716
 
-c. BONUS OPTIONAL PART IS COMPLETED
+	 ASSUMPTIONS:
+	  - Every name present in the scores.txt file is present atleast once in the edgelist.txt. Otherwise the project fails.
+	  - Servers are run before the clients
+	  - When an invalid input is given by any of the clients, an error message is thrown by both the clients and the central server. The programs get terminated.
 
-	This project is based on a simple social matching service where 2 clients send different usernames to the central server to find out their matching gap and the matching path. The backend servers help in identifying the path and the matching gap between the input usernames.
-	
-	STEPS TO RUN THE PROJECT:
+	 TESTING DONE:
+	  - The project theoritically supports upto 255 unique usernames and 400 edges.
+	  - However the maximum that was actually tested was 120 usernames and 130 edges and the project works. It is expected to work for higher numbers too.
+	  - While running the project in the VM with long edgelist.txt and scores.txt I realized that due to the slowness of the VM, some of the UDP packets were not received on time. So I have added sufficient delay for the servers to receives packets to reach comfortably. So please wait atleast 5 to 10 seconds for the output to be visible on the client terminals.
+
+	  STEPS TO RUN THE PROJECT:
 	 - Add the 'edgelist.txt' and 'scores.txt' in the same location as the source code .cpp files
 	 - Open a terminal and run 'make all' to generate the object/executable files
 	 - Open 6 terminals in total and run each program in the following order: (eg: For servers run './serverT', For clients run './clientA <input>')
@@ -16,9 +22,14 @@ c. BONUS OPTIONAL PART IS COMPLETED
 	 	2. serverT
 	 	3. serverS
 	 	4. serverP
-	 	5. clientA or clientB (Any order)
-	 	6. clientB or clientA (Any order)
+	 	5. clientA & clientB (Any order)
+
 	 - Any client can send the request first, no particular order. Only requirement is all the servers need to be running before the clients start to run.
+	 - Please wait for 5 to 10 seconds for the output to be visible on the client terminals 
+
+c. BONUS OPTIONAL PART IS COMPLETED
+
+	This project is based on a simple social matching service where 2 clients send different usernames to the central server to find out their matching gap and the matching path. The backend servers help in identifying the path and the matching gap between the input usernames.
 
 d. Code files in this project:
 	
@@ -94,8 +105,7 @@ e. Format of messages:
 
 g. Idiosyncrasy (Maximum Limit):
 	- The project supports upto 400 edges and 255 unique usernames in the edgelist/scorelist.
-	- When an invalid input is given by any of the clients, an error message is thrown by both the clients and the central server. The programs get terminated.
-
+	- Every name present in the scores.txt file is present atleast once in the edgelist.txt. Otherwise the project fails.
 h. References:
 
 	- Some snippets were referred from 'Beej's guide for Socket Programming' and modified to establish the TCP and UDP socket communication between the clients and the servers in this project. 
