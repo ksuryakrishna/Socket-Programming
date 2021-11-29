@@ -6,12 +6,13 @@ b. STUDENT ID: 9083261716
 
 	 ASSUMPTIONS:
 	  - Every name present in the scores.txt file is present atleast once in the edgelist.txt.
+	  - Similarly every name on the edgelist.txt should have one entry in the scores.txt.
 	  - Servers are run before the clients
-	  - When an invalid input is given by any of the clients, an error message is thrown by both the clients and the central server. The programs get terminated.
+	  - When an invalid input username is given by any of the clients, an error message is thrown by both the clients and the central server. The programs get terminated.
 
 	 TESTING DONE:
-	  - The project theoritically supports upto 255 unique usernames and 400 edges.
-	  - However the maximum that was actually tested was 120 usernames and 130 edges, and was found to work. It is expected to work for higher numbers too.
+	  - The project theoritically supports upto 255 unique usernames and more than 1000 edges.
+	  - The maximum that was actually tested was 120 usernames and 500 edges, and was found to work. It is expected to work for higher numbers too.
 	  - While running the project in the VM with long edgelist.txt and scores.txt I realized that due to the slowness of the VM, some of the UDP packets were not received on time because the receiver was slow in completing memory store operations. So I have added sufficient delay for the servers to receive packets comfortably. So please wait atleast 5 seconds for the output to be visible on the client terminals.
 
 	  STEPS TO RUN THE PROJECT:
@@ -105,8 +106,9 @@ e. Format of messages:
 
 g. Idiosyncrasy (Maximum Limit):
 
-	- The project supports upto 400 edges and 255 unique usernames in the edgelist/scorelist.
-	- Every name present in the scores.txt file should be present atleast once in the edgelist.txt. Otherwise the project might fail for few inputs.
+	- The project supports upto 255 unique usernames in the edgelist/scorelist.
+	- Every name present in the scores.txt file should be present atleast once in the edgelist.txt. That is, every name on the scores.txt should be a node in one of the graphs. Otherwise the project fails. 
+	- Similarly every name on the edgelist.txt should have one entry in the scores.txt.
 
 h. References:
 

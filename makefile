@@ -1,4 +1,4 @@
-#this is a simple makefil, might not be efficient but works well for this small project
+#this is a simple makefile, might not be efficient but works well for this small project
 
 all:   #to compile all the files together
 	g++ --std=c++11 clientA.cpp -o clientA

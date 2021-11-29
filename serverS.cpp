@@ -107,6 +107,7 @@ void Connect_to_Central_to_send_score(){
 				perror("talker: sendto");
 				exit(1);
 			}
+			for(int w = 0; w < 1000; w++); //delay to wait for other side to process
 				// printf("talker: sent %d bytes to central\n", numbytes);
 		}
 

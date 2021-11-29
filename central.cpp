@@ -350,7 +350,7 @@ void Connect_to_ServerP(){
 				exit(1);
 			}
 				// printf("talker: sent %d bytes to P\n", nbytes);
-			for (int w = 0; w < 1000; w++); //delay to wait for other side to process
+			for(int w = 0; w < 1000; w++); //delay to wait for other side to process
 		//send map as struct objs
 			// cout<<"Going to send index map";
 			for (auto x = 0; x < numVertices; x++){
@@ -359,12 +359,13 @@ void Connect_to_ServerP(){
 					perror("talker: sendto");
 					exit(1);
 				}
+				for(int w = 0; w < 1000; w++); //delay to wait for other side to process
 			}
 				// printf("talker: sent %d bytes to P\n", nbytes);
-				
+			for(int w = 0; w < 1000; w++); //delay to wait for other side to process
 		//send adjacency matrix as 1d
 			// cout<<"Going to send matrix\n";
-			if ((nbytes = sendto(sockfdP, (char*) &adj, 65000, 0,
+			if ((nbytes = sendto(sockfdP, (char*) &adj, 65500, 0,
 					 p->ai_addr, p->ai_addrlen)) == -1) {
 				perror("talker: sendto");
 				exit(1);
@@ -380,6 +381,7 @@ void Connect_to_ServerP(){
 					exit(1);
 				}
 				// printf("talker: sent %d bytes to P\n", nbytes);
+				for(int w = 0; w < 1000; w++); //delay to wait for other side to process
 			}
 		for(int w = 0; w < INT_MAX/4; w++); //delay to wait for other side to process
 			// cout<<"going to send index list\n";
@@ -475,7 +477,7 @@ void Connect_to_ServerS(){
 				exit(1);
 			}
 				// printf("talker: sent %d bytes to P\n", nbytes);
-			
+			for(int w = 0; w < 1000; w++); //delay to wait for other side to process
 		//send map as struct objs
 			// cout<<"Going to send index map";
 			for (auto x = 0; x < numVertices; x++){
@@ -484,6 +486,7 @@ void Connect_to_ServerS(){
 					perror("talker: sendto");
 					exit(1);
 				}
+				for(int w = 0; w < 1000; w++); //delay to wait for other side to process
 			}	
 		//printf("talker: sent %d bytes to server T\n", nbytes);
 
@@ -704,7 +707,7 @@ void Receive_graph_from_ServerT(){
 	
 			// printf("listener: waiting to recv adjacency matrix...\n");
 //now get the matrix
-	if ((nbytes = recvfrom(sockUDP_binded, (char*) &adj, 65000, 0,
+	if ((nbytes = recvfrom(sockUDP_binded, (char*) &adj, 65500, 0,
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 		perror("recvfrom");
 		exit(1);
